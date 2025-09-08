@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,11 +7,136 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
+
+// Sticker categories data
+const STICKER_CATEGORIES = [
+  {
+    id: 'emotions',
+    name: 'Emotions',
+    icon: '😊',
+    color: '#FFE4E1',
+    stickers: [
+      {
+        id: 'happy-1',
+        name: 'Happy',
+        emoji: '😊',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['happy', 'smile', 'joy'],
+      },
+      {
+        id: 'love-1',
+        name: 'Love',
+        emoji: '❤️',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['love', 'heart', 'romance'],
+      },
+      {
+        id: 'excited-1',
+        name: 'Excited',
+        emoji: '🤩',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['excited', 'wow', 'star'],
+      },
+      {
+        id: 'laugh-1',
+        name: 'Laugh',
+        emoji: '😂',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['laugh', 'funny', 'joy'],
+      },
+    ],
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    icon: '🌿',
+    color: '#E8F5E8',
+    stickers: [
+      {
+        id: 'tree-1',
+        name: 'Tree',
+        emoji: '🌳',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['tree', 'nature', 'green'],
+      },
+      {
+        id: 'flower-1',
+        name: 'Flower',
+        emoji: '🌸',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['flower', 'bloom', 'pink'],
+      },
+      {
+        id: 'sun-1',
+        name: 'Sun',
+        emoji: '☀️',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['sun', 'bright', 'yellow'],
+      },
+      {
+        id: 'rainbow-1',
+        name: 'Rainbow',
+        emoji: '🌈',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['rainbow', 'colors', 'pretty'],
+      },
+    ],
+  },
+  {
+    id: 'objects',
+    name: 'Objects',
+    icon: '⭐',
+    color: '#FFF5E6',
+    stickers: [
+      {
+        id: 'star-1',
+        name: 'Star',
+        emoji: '⭐',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['star', 'shine', 'favorite'],
+      },
+      {
+        id: 'heart-2',
+        name: 'Sparkles',
+        emoji: '✨',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['sparkles', 'magic', 'shine'],
+      },
+      {
+        id: 'fire-1',
+        name: 'Fire',
+        emoji: '🔥',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['fire', 'hot', 'energy'],
+      },
+      {
+        id: 'trophy-1',
+        name: 'Trophy',
+        emoji: '🏆',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['trophy', 'win', 'achievement'],
+      },
+    ],
+  },
+];
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { setActiveCategory, togglePalette } from '../../store/stickerSlice';
+import { setActiveCategory, togglePalette, loadStickerCategories } from '../../store/stickerSlice';
 import { addSticker } from '../../store/journalSlice';
 import { Sticker, StickerInstance } from '../../types/sticker.types';
+import { useOrientation } from '../../utils/useOrientation';
 import Icon from '../common/Icon';
 
 const StickerPalette: React.FC = () => {
@@ -19,11 +144,17 @@ const StickerPalette: React.FC = () => {
   const { availableStickers, activeCategoryId } = useSelector(
     (state: RootState) => state.sticker
   );
-  const { currentJournal, currentSpreadIndex } = useSelector(
+  const { currentJournal, currentSpreadIndex, currentPageIndex } = useSelector(
     (state: RootState) => state.journal
   );
+  const { isPortrait } = useOrientation();
 
   const activeCategory = availableStickers.find(cat => cat.id === activeCategoryId);
+
+  // Initialize sticker categories when component mounts
+  useEffect(() => {
+    dispatch(loadStickerCategories(STICKER_CATEGORIES));
+  }, [dispatch]);
 
   const handleCategorySelect = (categoryId: string) => {
     dispatch(setActiveCategory(categoryId));
@@ -32,10 +163,17 @@ const StickerPalette: React.FC = () => {
   const handleStickerSelect = (sticker: Sticker) => {
     if (!currentJournal) return;
 
-    // Get the current right page (or left if right doesn't exist)
-    const rightPageIndex = currentSpreadIndex * 2 + 1;
-    const leftPageIndex = currentSpreadIndex * 2;
-    const targetPage = currentJournal.pages[rightPageIndex] || currentJournal.pages[leftPageIndex];
+    // Get the current page based on orientation
+    let targetPage;
+    if (isPortrait) {
+      // In portrait mode, use the current page index
+      targetPage = currentJournal.pages[currentPageIndex];
+    } else {
+      // In landscape mode, prefer the right page, fall back to left page
+      const rightPageIndex = currentSpreadIndex * 2 + 1;
+      const leftPageIndex = currentSpreadIndex * 2;
+      targetPage = currentJournal.pages[rightPageIndex] || currentJournal.pages[leftPageIndex];
+    }
 
     if (!targetPage) return;
 
@@ -64,7 +202,7 @@ const StickerPalette: React.FC = () => {
       style={styles.stickerButton}
       onPress={() => handleStickerSelect(sticker)}
     >
-      <Text style={styles.stickerEmoji}>{sticker.emoji}</Text>
+      <Text style={isPortrait ? styles.stickerEmoji : styles.stickerEmojiLandscape}>{sticker.emoji}</Text>
       <Text style={styles.stickerName}>{sticker.name}</Text>
     </TouchableOpacity>
   );
@@ -103,16 +241,24 @@ const StickerPalette: React.FC = () => {
       </ScrollView>
 
       {/* Stickers grid */}
-      {activeCategory && (
+      {activeCategory && activeCategory.stickers && activeCategory.stickers.length > 0 ? (
         <FlatList
           data={activeCategory.stickers}
           renderItem={renderSticker}
           keyExtractor={(item) => item.id}
-          numColumns={4}
+          numColumns={5}
           style={styles.stickersGrid}
           contentContainerStyle={styles.stickersContent}
           showsVerticalScrollIndicator={false}
         />
+      ) : (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>
+            {availableStickers.length === 0 
+              ? 'Loading stickers...' 
+              : 'No stickers available in this category'}
+          </Text>
+        </View>
       )}
     </View>
   );
@@ -121,9 +267,7 @@ const StickerPalette: React.FC = () => {
 const styles = StyleSheet.create({
   palette: {
     flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 16,
-    overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   header: {
     flexDirection: 'row',
@@ -188,8 +332,8 @@ const styles = StyleSheet.create({
   stickerButton: {
     flex: 1,
     aspectRatio: 1,
-    margin: 4,
-    borderRadius: 12,
+    margin: 3,
+    borderRadius: 8,
     backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',
@@ -197,12 +341,27 @@ const styles = StyleSheet.create({
     borderColor: '#e0e0e0',
   },
   stickerEmoji: {
-    fontSize: 24,
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  stickerEmojiLandscape: {
+    fontSize: 14,
     marginBottom: 2,
   },
   stickerName: {
     fontSize: 10,
     color: '#666',
+    textAlign: 'center',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#999',
     textAlign: 'center',
   },
 });
