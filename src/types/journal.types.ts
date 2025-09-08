@@ -1,3 +1,5 @@
+import { StickerInstance } from './sticker.types';
+
 export interface Journal {
   id: string;
   title: string;

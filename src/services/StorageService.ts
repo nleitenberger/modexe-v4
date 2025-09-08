@@ -1,6 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Journal } from '../types/journal.types';
 
+// Type for serialized journal data (with string dates)
+type SerializedJournal = Omit<Journal, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
 const STORAGE_KEYS = {
   CURRENT_JOURNAL: 'current_journal',
   JOURNAL_LIST: 'journal_list',
@@ -12,7 +18,7 @@ export class StorageService {
    */
   static async saveJournal(journal: Journal): Promise<void> {
     try {
-      const journalData = {
+      const journalData: SerializedJournal = {
         ...journal,
         createdAt: journal.createdAt.toISOString(),
         updatedAt: journal.updatedAt.toISOString(),
@@ -34,7 +40,7 @@ export class StorageService {
         return null;
       }
 
-      const parsed = JSON.parse(journalData);
+      const parsed: SerializedJournal = JSON.parse(journalData);
       return {
         ...parsed,
         createdAt: new Date(parsed.createdAt),
@@ -64,11 +70,11 @@ export class StorageService {
   static async saveToJournalList(journal: Journal): Promise<void> {
     try {
       const existingListData = await AsyncStorage.getItem(STORAGE_KEYS.JOURNAL_LIST);
-      const journalList: Journal[] = existingListData ? JSON.parse(existingListData) : [];
+      const journalList: SerializedJournal[] = existingListData ? JSON.parse(existingListData) : [];
 
       // Update existing journal or add new one
       const existingIndex = journalList.findIndex(j => j.id === journal.id);
-      const journalData = {
+      const journalData: SerializedJournal = {
         ...journal,
         createdAt: journal.createdAt.toISOString(),
         updatedAt: journal.updatedAt.toISOString(),
@@ -97,8 +103,8 @@ export class StorageService {
         return [];
       }
 
-      const parsed = JSON.parse(journalListData);
-      return parsed.map((journal: any) => ({
+      const parsed: SerializedJournal[] = JSON.parse(journalListData);
+      return parsed.map((journal: SerializedJournal) => ({
         ...journal,
         createdAt: new Date(journal.createdAt),
         updatedAt: new Date(journal.updatedAt),
@@ -115,7 +121,7 @@ export class StorageService {
   static async deleteJournal(journalId: string): Promise<void> {
     try {
       const existingListData = await AsyncStorage.getItem(STORAGE_KEYS.JOURNAL_LIST);
-      const journalList: Journal[] = existingListData ? JSON.parse(existingListData) : [];
+      const journalList: SerializedJournal[] = existingListData ? JSON.parse(existingListData) : [];
 
       const filteredList = journalList.filter(j => j.id !== journalId);
       await AsyncStorage.setItem(STORAGE_KEYS.JOURNAL_LIST, JSON.stringify(filteredList));

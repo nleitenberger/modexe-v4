@@ -159,7 +159,7 @@ const ThemeEditor: React.FC = () => {
             ]}
             onPress={handleCreateCustomTheme}
           >
-            <Icon name="plus" size="xs" color={theme.backgroundColor} style={{ marginRight: 4 }} />
+            <Icon name="new-entry" size="xs" color={theme.backgroundColor} style={{ marginRight: 4 }} />
             <Text style={[
               styles.createButtonText,
               {

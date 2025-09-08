@@ -18,9 +18,10 @@ const EffectsEditor: React.FC = () => {
     let updatedTheme;
     
     if (nested) {
+      const currentPropertyValue = currentTheme[property as keyof typeof currentTheme];
       updatedTheme = createCustomTheme(currentTheme, {
         [property]: {
-          ...currentTheme[property as keyof typeof currentTheme],
+          ...(typeof currentPropertyValue === 'object' && currentPropertyValue !== null ? currentPropertyValue : {}),
           [nested]: value,
         },
       });
@@ -93,7 +94,10 @@ const EffectsEditor: React.FC = () => {
             backgroundColor: currentTheme.surfaceColor || currentTheme.backgroundColor,
             borderRadius: currentTheme.effects.borderRadius,
             shadowColor: currentTheme.shadows.color,
-            shadowOffset: currentTheme.shadows.offset,
+            shadowOffset: {
+              width: currentTheme.shadows.offset.x,
+              height: currentTheme.shadows.offset.y,
+            },
             shadowOpacity: currentTheme.shadows.enabled ? currentTheme.shadows.opacity : 0,
             shadowRadius: currentTheme.shadows.blur,
             elevation: currentTheme.effects.cardElevation,
@@ -466,7 +470,7 @@ const EffectsEditor: React.FC = () => {
           padding: currentTheme.spacing.large,
         }
       ]}>
-        <Icon name="effects" size="xl" color={currentTheme.textColor + '40'} style={{ marginBottom: currentTheme.spacing.medium }} />
+        <Icon name="palette" size="xl" color={currentTheme.textColor + '40'} style={{ marginBottom: currentTheme.spacing.medium }} />
         <Text style={[
           styles.comingSoonTitle,
           {

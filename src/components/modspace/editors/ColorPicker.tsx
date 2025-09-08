@@ -10,15 +10,31 @@ import {
 import { useTheme } from '../../../contexts/ThemeContext';
 import Icon from '../../common/Icon';
 
+type ColorType = 'primary' | 'secondary' | 'accent' | 'background' | 'text';
+type ThemeColorKey = 'primaryColor' | 'secondaryColor' | 'accentColor' | 'backgroundColor' | 'textColor';
+
+const colorTypeToThemeKey: Record<ColorType, ThemeColorKey> = {
+  primary: 'primaryColor',
+  secondary: 'secondaryColor',
+  accent: 'accentColor',
+  background: 'backgroundColor',
+  text: 'textColor',
+};
+
 const ColorPicker: React.FC = () => {
   const { currentTheme, setPreviewTheme, createCustomTheme } = useTheme();
-  const [selectedColorType, setSelectedColorType] = useState<'primary' | 'secondary' | 'accent' | 'background' | 'text'>('primary');
+  const [selectedColorType, setSelectedColorType] = useState<ColorType>('primary');
 
-  const handleColorChange = (colorType: string, newColor: string) => {
+  const handleColorChange = (colorType: ThemeColorKey, newColor: string) => {
     const updatedTheme = createCustomTheme(currentTheme, {
       [colorType]: newColor,
     });
     setPreviewTheme(updatedTheme);
+  };
+
+  const getThemeColor = (colorType: ColorType): string => {
+    const themeKey = colorTypeToThemeKey[colorType];
+    return currentTheme[themeKey];
   };
 
   const colorPresets = [
@@ -68,7 +84,7 @@ const ColorPicker: React.FC = () => {
         </Text>
         
         <View style={styles.colorTypeGrid}>
-          {['primary', 'secondary', 'accent', 'background', 'text'].map((type) => (
+          {(['primary', 'secondary', 'accent', 'background', 'text'] as ColorType[]).map((type) => (
             <TouchableOpacity
               key={type}
               style={[
@@ -80,11 +96,11 @@ const ColorPicker: React.FC = () => {
                   borderColor: currentTheme.textColor + '30',
                 }
               ]}
-              onPress={() => setSelectedColorType(type as any)}
+              onPress={() => setSelectedColorType(type)}
             >
               <View style={[
                 styles.colorPreview,
-                { backgroundColor: currentTheme[type + 'Color'] }
+                { backgroundColor: getThemeColor(type) }
               ]} />
               <Text style={[
                 styles.colorTypeName,
@@ -122,11 +138,11 @@ const ColorPicker: React.FC = () => {
                 styles.colorPreset,
                 { 
                   backgroundColor: color,
-                  borderWidth: color === currentTheme[selectedColorType + 'Color'] ? 3 : 1,
-                  borderColor: color === currentTheme[selectedColorType + 'Color'] ? currentTheme.primaryColor : currentTheme.textColor + '30',
+                  borderWidth: color === getThemeColor(selectedColorType) ? 3 : 1,
+                  borderColor: color === getThemeColor(selectedColorType) ? currentTheme.primaryColor : currentTheme.textColor + '30',
                 }
               ]}
-              onPress={() => handleColorChange(selectedColorType + 'Color', color)}
+              onPress={() => handleColorChange(colorTypeToThemeKey[selectedColorType], color)}
             />
           ))}
         </View>
@@ -156,10 +172,10 @@ const ColorPicker: React.FC = () => {
                 borderRadius: currentTheme.effects.borderRadius,
               }
             ]}
-            value={currentTheme[selectedColorType + 'Color']}
+            value={getThemeColor(selectedColorType)}
             onChangeText={(text) => {
               if (text.startsWith('#') && (text.length === 7 || text.length === 4)) {
-                handleColorChange(selectedColorType + 'Color', text);
+                handleColorChange(colorTypeToThemeKey[selectedColorType], text);
               }
             }}
             placeholder="#000000"
@@ -169,7 +185,7 @@ const ColorPicker: React.FC = () => {
           <View style={[
             styles.currentColorPreview,
             { 
-              backgroundColor: currentTheme[selectedColorType + 'Color'],
+              backgroundColor: getThemeColor(selectedColorType),
               borderColor: currentTheme.textColor + '30',
             }
           ]} />

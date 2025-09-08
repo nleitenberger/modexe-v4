@@ -193,7 +193,7 @@ const CreativeLayout: React.FC<CreativeLayoutProps> = ({
                   backgroundColor: currentTheme.primaryColor,
                 }
               ]}>
-                <Icon name="drag" size="xs" color={currentTheme.backgroundColor} />
+                <Icon name="edit" size="xs" color={currentTheme.backgroundColor} />
               </View>
               
               {/* Resize handle */}
@@ -203,7 +203,7 @@ const CreativeLayout: React.FC<CreativeLayoutProps> = ({
                   backgroundColor: currentTheme.secondaryColor,
                 }
               ]}>
-                <Icon name="resize" size="xs" color={currentTheme.backgroundColor} />
+                <Icon name="customize" size="xs" color={currentTheme.backgroundColor} />
               </View>
             </>
           )}
@@ -291,7 +291,7 @@ const CreativeLayout: React.FC<CreativeLayoutProps> = ({
           }
         ]}>
           <View style={styles.editModeInfo}>
-            <Icon name="drag" size="sm" color={currentTheme.primaryColor} />
+            <Icon name="edit" size="sm" color={currentTheme.primaryColor} />
             <Text style={[
               styles.editModeText,
               {

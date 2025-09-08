@@ -24,7 +24,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({
 }) => {
 
   const getCardHeight = () => {
-    if (!width) return 'auto';
+    if (!width) return undefined;
     
     switch (aspectRatio) {
       case 'square':
@@ -46,7 +46,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({
     const baseStyle = {
       backgroundColor: theme.surfaceColor || theme.backgroundColor,
       borderRadius: theme.effects.borderRadius,
-      width: width || '100%',
+      width: width || undefined,
       height: getCardHeight(),
     };
 
@@ -55,7 +55,10 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({
         return {
           ...baseStyle,
           shadowColor: theme.shadows.color,
-          shadowOffset: theme.shadows.offset,
+          shadowOffset: {
+            width: theme.shadows.offset.x,
+            height: theme.shadows.offset.y,
+          },
           shadowOpacity: theme.shadows.enabled ? theme.shadows.opacity : 0,
           shadowRadius: theme.shadows.blur,
           elevation: theme.effects.cardElevation,
@@ -206,7 +209,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({
 
             {entry.comments.length > 0 && (
               <View style={styles.statItem}>
-                <Icon name="comment" size="xs" color={theme.textColor + '99'} style={{ marginRight: 4 }} />
+                <Icon name="edit" size="xs" color={theme.textColor + '99'} style={{ marginRight: 4 }} />
                 <Text style={[
                   styles.statText,
                   { 
@@ -270,7 +273,7 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({
         {entry.visibility !== 'public' && (
           <View style={[styles.privacyIndicator, { marginTop: theme.spacing.small }]}>
             <Icon 
-              name={entry.visibility === 'private' ? 'lock' : 'friends'} 
+              name={entry.visibility === 'private' ? 'lock' : 'user'} 
               size="xs" 
               color={theme.warningColor || theme.accentColor}
             />

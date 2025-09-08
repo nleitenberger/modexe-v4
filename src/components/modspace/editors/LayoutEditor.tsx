@@ -11,7 +11,7 @@ import { RootState } from '../../../store';
 import { updateModSpaceLayout } from '../../../store/modspaceSlice';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { LAYOUT_TEMPLATES } from '../../../types/modspace.types';
-import Icon from '../../common/Icon';
+import Icon, { IconName } from '../../common/Icon';
 
 const LayoutEditor: React.FC = () => {
   const { currentTheme } = useTheme();
@@ -22,15 +22,15 @@ const LayoutEditor: React.FC = () => {
     dispatch(updateModSpaceLayout(layout));
   };
 
-  const getLayoutIcon = (layoutId: string) => {
-    const icons: Record<string, string> = {
-      grid: 'grid',
-      timeline: 'timeline',
-      magazine: 'magazine',
-      minimal: 'minimal',
-      creative: 'creative',
+  const getLayoutIcon = (layoutId: string): IconName => {
+    const icons: Record<string, IconName> = {
+      grid: 'media',
+      timeline: 'calendar',
+      magazine: 'book',
+      minimal: 'edit',
+      creative: 'palette',
     };
-    return icons[layoutId] || 'layout';
+    return icons[layoutId] || 'settings';
   };
 
   return (

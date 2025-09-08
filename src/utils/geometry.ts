@@ -1,4 +1,5 @@
-import { Rectangle, Position } from '../types/text.types';
+import { Rectangle } from '../types/text.types';
+import { Position } from '../types/sticker.types';
 
 /**
  * Geometry utilities for layout calculations

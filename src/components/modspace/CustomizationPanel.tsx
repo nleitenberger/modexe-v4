@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useOrientation } from '../../utils/useOrientation';
-import Icon from '../common/Icon';
+import Icon, { IconName } from '../common/Icon';
 import ThemeEditor from './editors/ThemeEditor';
 import LayoutEditor from './editors/LayoutEditor';
 import ColorPicker from './editors/ColorPicker';
@@ -30,7 +30,7 @@ export type CustomizationTab = 'themes' | 'layout' | 'colors' | 'typography' | '
 interface TabInfo {
   id: CustomizationTab;
   name: string;
-  icon: string;
+  icon: IconName;
   description: string;
 }
 
@@ -44,25 +44,25 @@ const CUSTOMIZATION_TABS: TabInfo[] = [
   {
     id: 'layout',
     name: 'Layout',
-    icon: 'layout',
+    icon: 'media',
     description: 'Arrange your journal entries with different layouts',
   },
   {
     id: 'colors',
     name: 'Colors',
-    icon: 'color-picker',
+    icon: 'palette',
     description: 'Customize colors, backgrounds, and gradients',
   },
   {
     id: 'typography',
     name: 'Typography',
-    icon: 'text',
+    icon: 'edit',
     description: 'Adjust fonts, sizes, and text styling',
   },
   {
     id: 'effects',
     name: 'Effects',
-    icon: 'effects',
+    icon: 'customize',
     description: 'Add shadows, animations, and visual effects',
   },
 ];
@@ -264,7 +264,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     onPress={undoTheme}
                     disabled={!canUndo}
                   >
-                    <Icon name="undo" size="sm" color={theme.textColor} />
+                    <Icon name="arrow-right" size="sm" color={theme.textColor} style={{ transform: [{ rotate: '180deg' }] }} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
@@ -277,7 +277,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                     onPress={redoTheme}
                     disabled={!canRedo}
                   >
-                    <Icon name="redo" size="sm" color={theme.textColor} />
+                    <Icon name="arrow-right" size="sm" color={theme.textColor} />
                   </TouchableOpacity>
                 </View>
 

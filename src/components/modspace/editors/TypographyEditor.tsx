@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -340,7 +340,7 @@ const TypographyEditor: React.FC = () => {
           padding: currentTheme.spacing.large,
         }
       ]}>
-        <Icon name="text" size="xl" color={currentTheme.textColor + '40'} style={{ marginBottom: currentTheme.spacing.medium }} />
+        <Icon name="edit" size="xl" color={currentTheme.textColor + '40'} style={{ marginBottom: currentTheme.spacing.medium }} />
         <Text style={[
           styles.comingSoonTitle,
           {

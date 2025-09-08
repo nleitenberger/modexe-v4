@@ -121,7 +121,7 @@ const MinimalLayout: React.FC<MinimalLayoutProps> = ({
         {/* Privacy indicator */}
         {entry.visibility !== 'public' && (
           <Icon 
-            name={entry.visibility === 'private' ? 'lock' : 'friends'} 
+            name={entry.visibility === 'private' ? 'lock' : 'user'} 
             size="xs" 
             color={currentTheme.textColor + '60'}
           />
@@ -247,7 +247,7 @@ const MinimalLayout: React.FC<MinimalLayoutProps> = ({
 
             {entry.comments.length > 0 && (
               <View style={styles.statItem}>
-                <Icon name="comment" size="xs" color={currentTheme.textColor + '60'} />
+                <Icon name="edit" size="xs" color={currentTheme.textColor + '60'} />
                 <Text style={[
                   styles.statText,
                   {
