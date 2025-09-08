@@ -20,6 +20,7 @@ import CustomizationPanel from './CustomizationPanel';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
+import { useTheme } from '../../contexts/ThemeContext';
 import Icon from '../common/Icon';
 
 const ModSpaceProfile: React.FC = () => {
@@ -29,8 +30,12 @@ const ModSpaceProfile: React.FC = () => {
     (state: RootState) => state.modspace
   );
   const { isPortrait } = useOrientation();
+  const { currentTheme } = useTheme();
   const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
   const [showCustomizationPanel, setShowCustomizationPanel] = React.useState(false);
+  
+  // Create theme-aware styles
+  const themedStyles = createThemedStyles(currentTheme);
 
   const handleNewEntryPress = () => {
     setShowNewEntryOptions(true);
@@ -83,9 +88,9 @@ const ModSpaceProfile: React.FC = () => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading ModSpace...</Text>
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.loadingContainer}>
+          <Text style={themedStyles.loadingText}>Loading ModSpace...</Text>
         </View>
       </SafeAreaView>
     );
@@ -93,24 +98,24 @@ const ModSpaceProfile: React.FC = () => {
 
   if (!currentModSpace) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyTextContainer}>
-            <Text style={styles.emptyText}>Welcome to ModSpace!</Text>
-            <Icon name="rocket" size="md" color="#007AFF" style={{ marginLeft: 8 }} />
+      <SafeAreaView style={themedStyles.container}>
+        <View style={themedStyles.emptyContainer}>
+          <View style={themedStyles.emptyTextContainer}>
+            <Text style={themedStyles.emptyText}>Welcome to ModSpace!</Text>
+            <Icon name="rocket" size="md" color={currentTheme.primaryColor} style={{ marginLeft: 8 }} />
           </View>
-          <Text style={styles.emptySubText}>
+          <Text style={themedStyles.emptySubText}>
             Your personal profile and content hub
           </Text>
           <TouchableOpacity 
-            style={styles.createButton}
+            style={themedStyles.createButton}
             onPress={() => dispatch(createModSpace({
               userId: 'user-1',
               username: 'journaler',
               displayName: 'My Journal Space',
             }))}
           >
-            <Text style={styles.createButtonText}>Create Your ModSpace</Text>
+            <Text style={themedStyles.createButtonText}>Create Your ModSpace</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -118,87 +123,90 @@ const ModSpaceProfile: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={themedStyles.container}>
       <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingHorizontal: isPortrait ? 16 : 32 }
-        ]}
+        style={themedStyles.scrollView}
+        contentContainerStyle={themedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* Profile Header with integrated stats */}
         <ProfileHeader modspace={currentModSpace} />
 
         {/* Quick Actions */}
-        <View style={styles.quickActionsContainer}>
+        <View style={[
+          themedStyles.quickActionsContainer, 
+          { paddingHorizontal: isPortrait ? 16 : 32 }
+        ]}>
           <TouchableOpacity 
-            style={styles.actionButton}
+            style={themedStyles.actionButton}
             onPress={handleNewEntryPress}
           >
-            <View style={styles.actionButtonContent}>
-              <Icon name="new-entry" size="sm" color="#333" style={{ marginRight: 6 }} />
-              <Text style={styles.actionButtonText}>New Entry</Text>
+            <View style={themedStyles.actionButtonContent}>
+              <Icon name="new-entry" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
+              <Text style={themedStyles.actionButtonText}>New Entry</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-            <View style={styles.actionButtonContent}>
-              <Icon name="share" size="sm" color="#333" style={{ marginRight: 6 }} />
-              <Text style={styles.actionButtonText}>Share Entry</Text>
+          <TouchableOpacity style={themedStyles.actionButton}>
+            <View style={themedStyles.actionButtonContent}>
+              <Icon name="share" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
+              <Text style={themedStyles.actionButtonText}>Share Entry</Text>
             </View>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.actionButton}
+            style={themedStyles.actionButton}
             onPress={handleCustomizePress}
           >
-            <View style={styles.actionButtonContent}>
-              <Icon name="customize" size="sm" color="#333" style={{ marginRight: 6 }} />
-              <Text style={styles.actionButtonText}>Customize</Text>
+            <View style={themedStyles.actionButtonContent}>
+              <Icon name="customize" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
+              <Text style={themedStyles.actionButtonText}>Customize</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         {/* Content Sections */}
-        <View style={styles.contentContainer}>
+        <View style={[
+          themedStyles.contentContainer,
+          { paddingHorizontal: isPortrait ? 16 : 32 }
+        ]}>
           
 
           {/* Shared Entries Section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Shared Journal Entries</Text>
+          <View style={themedStyles.sectionContainer}>
+            <Text style={themedStyles.sectionTitle}>Shared Journal Entries</Text>
             {currentModSpace.sharedEntries.length === 0 ? (
-              <View style={styles.emptySection}>
-                <Text style={styles.emptySectionText}>
+              <View style={themedStyles.emptySection}>
+                <Text style={themedStyles.emptySectionText}>
                   No entries shared yet
                 </Text>
-                <Text style={styles.emptySectionSubText}>
+                <Text style={themedStyles.emptySectionSubText}>
                   Share your favorite journal pages to showcase your writing
                 </Text>
               </View>
             ) : (
               <View style={[
-                styles.entriesGrid,
-                isPortrait ? styles.entriesVertical : styles.entriesHorizontal
+                themedStyles.entriesGrid,
+                isPortrait ? themedStyles.entriesVertical : themedStyles.entriesHorizontal
               ]}>
                 {currentModSpace.sharedEntries.map((entry) => (
                   <TouchableOpacity 
                     key={entry.id} 
                     style={[
-                      styles.entryCard,
-                      isPortrait ? styles.entryCardVertical : styles.entryCardHorizontal
+                      themedStyles.entryCard,
+                      isPortrait ? themedStyles.entryCardVertical : themedStyles.entryCardHorizontal
                     ]}
                   >
-                    <Text style={styles.entryTitle}>{entry.title}</Text>
-                    <Text style={styles.entryExcerpt} numberOfLines={3}>
+                    <Text style={themedStyles.entryTitle}>{entry.title}</Text>
+                    <Text style={themedStyles.entryExcerpt} numberOfLines={3}>
                       {entry.excerpt}
                     </Text>
-                    <View style={styles.entryStats}>
-                      <View style={styles.entryStatContainer}>
-                        <Icon name="heart" size="xs" color="#FF3B30" style={{ marginRight: 4 }} />
-                        <Text style={styles.entryStatText}>{entry.likes}</Text>
+                    <View style={themedStyles.entryStats}>
+                      <View style={themedStyles.entryStatContainer}>
+                        <Icon name="heart" size="xs" color={currentTheme.errorColor || "#FF3B30"} style={{ marginRight: 4 }} />
+                        <Text style={themedStyles.entryStatText}>{entry.likes}</Text>
                       </View>
-                      <View style={styles.entryStatContainer}>
-                        <Icon name="discover" size="xs" color="#999" style={{ marginRight: 4 }} />
-                        <Text style={styles.entryStatText}>{entry.views}</Text>
+                      <View style={themedStyles.entryStatContainer}>
+                        <Icon name="discover" size="xs" color={currentTheme.textColor} style={{ marginRight: 4, opacity: 0.6 }} />
+                        <Text style={themedStyles.entryStatText}>{entry.views}</Text>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -208,19 +216,19 @@ const ModSpaceProfile: React.FC = () => {
           </View>
 
           {/* Media Gallery Section */}
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Media Gallery</Text>
+          <View style={themedStyles.sectionContainer}>
+            <Text style={themedStyles.sectionTitle}>Media Gallery</Text>
             {currentModSpace.mediaGallery.length === 0 ? (
-              <View style={styles.emptySection}>
-                <Text style={styles.emptySectionText}>
+              <View style={themedStyles.emptySection}>
+                <Text style={themedStyles.emptySectionText}>
                   No media uploaded yet
                 </Text>
-                <Text style={styles.emptySectionSubText}>
+                <Text style={themedStyles.emptySectionSubText}>
                   Add photos and videos to personalize your ModSpace
                 </Text>
               </View>
             ) : (
-              <View style={styles.mediaGrid}>
+              <View style={themedStyles.mediaGrid}>
                 {/* Media items will be rendered here */}
               </View>
             )}
@@ -237,42 +245,42 @@ const ModSpaceProfile: React.FC = () => {
         animationType="fade"
         onRequestClose={handleCancelNewEntry}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create New Entry</Text>
-            <Text style={styles.modalSubtitle}>
+        <View style={themedStyles.modalOverlay}>
+          <View style={themedStyles.modalContent}>
+            <Text style={themedStyles.modalTitle}>Create New Entry</Text>
+            <Text style={themedStyles.modalSubtitle}>
               Choose the type of content you'd like to create
             </Text>
             
-            <View style={styles.entryOptionsContainer}>
+            <View style={themedStyles.entryOptionsContainer}>
               <TouchableOpacity 
-                style={styles.entryOption}
+                style={themedStyles.entryOption}
                 onPress={handleCreateJournal}
               >
-                <Icon name="edit" size="xl" color="#007AFF" />
-                <Text style={styles.entryOptionTitle}>Journal Entry</Text>
-                <Text style={styles.entryOptionDescription}>
+                <Icon name="edit" size="xl" color={currentTheme.primaryColor} />
+                <Text style={themedStyles.entryOptionTitle}>Journal Entry</Text>
+                <Text style={themedStyles.entryOptionDescription}>
                   Write and design with text and stickers
                 </Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={styles.entryOption}
+                style={themedStyles.entryOption}
                 onPress={handleCreateMedia}
               >
-                <Icon name="media" size="xl" color="#34C759" />
-                <Text style={styles.entryOptionTitle}>Media Post</Text>
-                <Text style={styles.entryOptionDescription}>
+                <Icon name="media" size="xl" color={currentTheme.successColor || '#34C759'} />
+                <Text style={themedStyles.entryOptionTitle}>Media Post</Text>
+                <Text style={themedStyles.entryOptionDescription}>
                   Share photos, videos, or other media
                 </Text>
               </TouchableOpacity>
             </View>
             
             <TouchableOpacity 
-              style={[styles.modalButton, styles.modalCancelButton]}
+              style={[themedStyles.modalButton, themedStyles.modalCancelButton]}
               onPress={handleCancelNewEntry}
             >
-              <Text style={styles.modalCancelText}>Cancel</Text>
+              <Text style={themedStyles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -289,10 +297,12 @@ const ModSpaceProfile: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+// Create theme-aware styles function
+const createThemedStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
+    width: '100%',
+    backgroundColor: theme.backgroundColor,
   },
   loadingContainer: {
     flex: 1,
@@ -301,88 +311,93 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.6,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 32,
+    paddingHorizontal: theme.spacing?.xl || 32,
   },
   emptyTextContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing?.xs || 8,
   },
   emptyText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: theme.textColor,
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing?.xs || 8,
   },
   emptySubText: {
     fontSize: 16,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.6,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: theme.spacing?.xl || 32,
   },
   createButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    backgroundColor: theme.primaryColor,
+    paddingHorizontal: theme.spacing?.lg || 24,
+    paddingVertical: theme.spacing?.sm || 12,
+    borderRadius: theme.borderRadius || 8,
   },
   createButtonText: {
-    color: 'white',
+    color: theme.surfaceColor || 'white',
     fontSize: 16,
     fontWeight: '600',
   },
   scrollView: {
     flex: 1,
+    width: '100%',
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: theme.spacing?.xl || 32,
   },
   contentContainer: {
-    marginTop: 16,
+    marginTop: theme.spacing?.md || 16,
   },
   sectionContainer: {
-    marginBottom: 24,
+    marginBottom: theme.spacing?.lg || 24,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 16,
+    color: theme.textColor,
+    marginBottom: theme.spacing?.md || 16,
   },
   emptySection: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 32,
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    borderRadius: theme.borderRadius || 12,
+    padding: theme.spacing?.xl || 32,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: theme.shadows?.offset?.y || 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: theme.shadows?.opacity || 0.1,
+    shadowRadius: theme.shadows?.blur || 4,
+    elevation: theme.shadows?.elevation || 3,
   },
   emptySectionText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666',
-    marginBottom: 8,
+    color: theme.textColor,
+    opacity: 0.8,
+    marginBottom: theme.spacing?.xs || 8,
   },
   emptySectionSubText: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textColor,
+    opacity: 0.6,
     textAlign: 'center',
   },
   entriesGrid: {
-    gap: 16,
+    gap: theme.spacing?.md || 16,
   },
   entriesVertical: {
     flexDirection: 'column',
@@ -393,41 +408,42 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   entryCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    borderRadius: theme.borderRadius || 12,
+    padding: theme.spacing?.md || 16,
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: theme.shadows?.offset?.y || 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: theme.shadows?.opacity || 0.1,
+    shadowRadius: theme.shadows?.blur || 4,
+    elevation: theme.shadows?.elevation || 3,
   },
   entryCardVertical: {
     width: '100%',
-    marginBottom: 16,
+    marginBottom: theme.spacing?.md || 16,
   },
   entryCardHorizontal: {
     width: '48%',
-    marginBottom: 16,
+    marginBottom: theme.spacing?.md || 16,
   },
   entryTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: theme.textColor,
+    marginBottom: theme.spacing?.xs || 8,
   },
   entryExcerpt: {
     fontSize: 14,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.8,
     lineHeight: 20,
-    marginBottom: 12,
+    marginBottom: theme.spacing?.sm || 12,
   },
   entryStats: {
     flexDirection: 'row',
-    gap: 16,
+    gap: theme.spacing?.md || 16,
   },
   entryStatContainer: {
     flexDirection: 'row',
@@ -435,11 +451,12 @@ const styles = StyleSheet.create({
   },
   entryStatText: {
     fontSize: 12,
-    color: '#999',
+    color: theme.textColor,
+    opacity: 0.6,
   },
   mediaGrid: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    borderRadius: theme.borderRadius || 12,
     minHeight: 120,
     justifyContent: 'center',
     alignItems: 'center',
@@ -447,23 +464,23 @@ const styles = StyleSheet.create({
   quickActionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 12,
-    marginBottom: 24,
+    gap: theme.spacing?.sm || 12,
+    marginBottom: theme.spacing?.lg || 24,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: 'white',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: '#000',
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    borderRadius: theme.borderRadius || 8,
+    paddingHorizontal: theme.spacing?.md || 16,
+    paddingVertical: theme.spacing?.sm || 12,
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: theme.shadows?.offset?.y || 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOpacity: theme.shadows?.opacity || 0.1,
+    shadowRadius: theme.shadows?.blur || 2,
+    elevation: theme.shadows?.elevation || 2,
     alignItems: 'center',
   },
   actionButtonContent: {
@@ -473,81 +490,84 @@ const styles = StyleSheet.create({
   actionButtonText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#333',
+    color: theme.textColor,
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: theme.spacing?.lg || 20,
   },
   modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    borderRadius: theme.borderRadius || 16,
+    padding: theme.spacing?.lg || 24,
     width: '100%',
     maxWidth: 400,
-    shadowColor: '#000',
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: theme.shadows?.offset?.y || 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: theme.shadows?.opacity || 0.3,
+    shadowRadius: theme.shadows?.blur || 8,
+    elevation: theme.shadows?.elevation || 8,
   },
   entryOptionsContainer: {
-    gap: 16,
-    marginBottom: 20,
+    gap: theme.spacing?.md || 16,
+    marginBottom: theme.spacing?.lg || 20,
   },
   entryOption: {
-    backgroundColor: '#f8f9fa',
-    borderRadius: 12,
-    padding: 20,
+    backgroundColor: theme.secondaryColor || theme.surfaceColor,
+    borderRadius: theme.borderRadius || 12,
+    padding: theme.spacing?.lg || 20,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: theme.textColor + '20', // 20% opacity
   },
   entryOptionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
-    marginTop: 12,
+    color: theme.textColor,
+    marginTop: theme.spacing?.sm || 12,
     marginBottom: 4,
   },
   entryOptionDescription: {
     fontSize: 14,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.8,
     textAlign: 'center',
     lineHeight: 20,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    color: theme.textColor,
+    marginBottom: theme.spacing?.xs || 8,
     textAlign: 'center',
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.6,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: theme.spacing?.lg || 20,
   },
   modalButton: {
     flex: 1,
     paddingVertical: 14,
-    borderRadius: 8,
+    borderRadius: theme.borderRadius || 8,
     alignItems: 'center',
   },
   modalCancelButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.secondaryColor || theme.surfaceColor,
   },
   modalCancelText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.8,
   },
 });
 

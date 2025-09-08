@@ -12,6 +12,7 @@ import { ModSpace } from '../../../types/modspace.types';
 import { RootState } from '../../../store';
 import { setEditMode } from '../../../store/modspaceSlice';
 import { useOrientation } from '../../../utils/useOrientation';
+import { useTheme } from '../../../contexts/ThemeContext';
 import Icon from '../../common/Icon';
 
 interface ProfileHeaderProps {
@@ -24,6 +25,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
   const dispatch = useDispatch();
   const { isEditMode } = useSelector((state: RootState) => state.modspace);
   const { isPortrait } = useOrientation();
+  const { currentTheme } = useTheme();
 
   const handleEditProfile = () => {
     dispatch(setEditMode(!isEditMode));
@@ -47,24 +49,27 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
 
   const headerHeight = isPortrait ? 200 : 150;
   const avatarSize = isPortrait ? 100 : 80;
+  
+  // Create theme-aware styles
+  const themedStyles = createThemedStyles(currentTheme);
 
   return (
-    <View style={[styles.container, { minHeight: headerHeight }]}>
+    <View style={[themedStyles.container, { minHeight: headerHeight }]}>
       {/* Cover Image */}
       <ImageBackground
         source={modspace.coverImage ? { uri: modspace.coverImage } : undefined}
-        style={[styles.coverImage, { height: headerHeight * 0.6 }]}
-        imageStyle={styles.coverImageStyle}
+        style={[themedStyles.coverImage, { height: headerHeight * 0.6 }]}
+        imageStyle={themedStyles.coverImageStyle}
       >
         {!modspace.coverImage && (
-          <View style={[styles.defaultCover, { height: headerHeight * 0.6 }]}>
+          <View style={[themedStyles.defaultCover, { height: headerHeight * 0.6 }]}>
             <Icon name="book" size={48} color="rgba(255, 255, 255, 0.8)" />
           </View>
         )}
         
         {/* Edit Button */}
         <TouchableOpacity 
-          style={styles.editButton}
+          style={themedStyles.editButton}
           onPress={handleEditProfile}
         >
           <Icon 
@@ -76,11 +81,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       </ImageBackground>
 
       {/* Profile Info */}
-      <View style={[styles.profileInfo, { paddingTop: avatarSize / 2 + 10 }]}>
+      <View style={[themedStyles.profileInfo, { paddingTop: avatarSize / 2 + 10 }]}>
         
         {/* Avatar */}
         <View style={[
-          styles.avatarContainer, 
+          themedStyles.avatarContainer, 
           { 
             width: avatarSize, 
             height: avatarSize,
@@ -90,16 +95,16 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
           {modspace.avatar ? (
             <ImageBackground
               source={{ uri: modspace.avatar }}
-              style={styles.avatar}
-              imageStyle={styles.avatarImageStyle}
+              style={themedStyles.avatar}
+              imageStyle={themedStyles.avatarImageStyle}
             />
           ) : (
-            <View style={[styles.defaultAvatar, { 
+            <View style={[themedStyles.defaultAvatar, { 
               width: avatarSize, 
               height: avatarSize,
               borderRadius: avatarSize / 2,
             }]}>
-              <Text style={[styles.avatarText, { fontSize: avatarSize * 0.3 }]}>
+              <Text style={[themedStyles.avatarText, { fontSize: avatarSize * 0.3 }]}>
                 {getInitials(modspace.displayName)}
               </Text>
             </View>
@@ -107,26 +112,26 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
         </View>
 
         {/* User Info */}
-        <View style={styles.userInfo}>
-          <Text style={styles.displayName}>{modspace.displayName}</Text>
-          <Text style={styles.username}>@{modspace.username}</Text>
+        <View style={themedStyles.userInfo}>
+          <Text style={themedStyles.displayName}>{modspace.displayName}</Text>
+          <Text style={themedStyles.username}>@{modspace.username}</Text>
           
           {modspace.bio && (
-            <Text style={styles.bio}>{modspace.bio}</Text>
+            <Text style={themedStyles.bio}>{modspace.bio}</Text>
           )}
 
           {/* Join Date & Last Active */}
-          <View style={styles.metaInfo}>
-            <View style={styles.metaItem}>
-              <Icon name="calendar" size="xs" color="#999" style={{ marginRight: 6 }} />
-              <Text style={styles.metaText}>
+          <View style={themedStyles.metaInfo}>
+            <View style={themedStyles.metaItem}>
+              <Icon name="calendar" size="xs" color={currentTheme.textColor} style={{ marginRight: 6, opacity: 0.6 }} />
+              <Text style={themedStyles.metaText}>
                 Joined {formatJoinDate(modspace.stats.joinDate)}
               </Text>
             </View>
             {modspace.privacy.showLastActive && (
-              <View style={styles.metaItem}>
-                <Icon name="active" size="xs" color="#34C759" style={{ marginRight: 6 }} />
-                <Text style={styles.metaText}>
+              <View style={themedStyles.metaItem}>
+                <Icon name="active" size="xs" color={currentTheme.successColor || '#34C759'} style={{ marginRight: 6 }} />
+                <Text style={themedStyles.metaText}>
                   Active recently
                 </Text>
               </View>
@@ -135,18 +140,18 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
 
           {/* Social Links */}
           {modspace.socialLinks.length > 0 && (
-            <View style={styles.socialLinksContainer}>
+            <View style={themedStyles.socialLinksContainer}>
               {modspace.socialLinks
                 .filter(link => link.isVisible)
                 .slice(0, 3) // Show max 3 social links
                 .map((link) => (
                   <TouchableOpacity 
                     key={link.id} 
-                    style={styles.socialLinkButton}
+                    style={themedStyles.socialLinkButton}
                   >
-                    <View style={styles.socialLinkContent}>
-                      <Icon name={getSocialIconName(link.platform)} size="sm" color="#666" style={{ marginRight: 4 }} />
-                      <Text style={styles.socialLinkText}>
+                    <View style={themedStyles.socialLinkContent}>
+                      <Icon name={getSocialIconName(link.platform)} size="sm" color={currentTheme.textColor} style={{ marginRight: 4, opacity: 0.6 }} />
+                      <Text style={themedStyles.socialLinkText}>
                         {link.displayName || link.platform}
                       </Text>
                     </View>
@@ -158,30 +163,30 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       </View>
 
       {/* Stats Section - Outside of profileInfo to span full width */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
+      <View style={themedStyles.statsContainer}>
+        <View style={themedStyles.statItem}>
+          <Text style={themedStyles.statNumber}>
             {modspace.stats.totalEntries}
           </Text>
-          <Text style={styles.statLabel}>Entries</Text>
+          <Text style={themedStyles.statLabel}>Entries</Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
+        <View style={themedStyles.statItem}>
+          <Text style={themedStyles.statNumber}>
             {modspace.stats.totalViews}
           </Text>
-          <Text style={styles.statLabel}>Views</Text>
+          <Text style={themedStyles.statLabel}>Views</Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
+        <View style={themedStyles.statItem}>
+          <Text style={themedStyles.statNumber}>
             {modspace.stats.followers}
           </Text>
-          <Text style={styles.statLabel}>Followers</Text>
+          <Text style={themedStyles.statLabel}>Followers</Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>
+        <View style={themedStyles.statItem}>
+          <Text style={themedStyles.statNumber}>
             {modspace.stats.following}
           </Text>
-          <Text style={styles.statLabel}>Following</Text>
+          <Text style={themedStyles.statLabel}>Following</Text>
         </View>
       </View>
     </View>
@@ -201,20 +206,21 @@ const getSocialIconName = (platform: string) => {
   return iconNames[platform] || iconNames.other;
 };
 
-const styles = StyleSheet.create({
+// Create theme-aware styles function
+const createThemedStyles = (theme: any) => StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    borderRadius: 16,
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
+    width: '100%',
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: theme.shadows?.offset?.y || 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
-    marginBottom: 8,
+    shadowOpacity: theme.shadows?.opacity || 0.1,
+    shadowRadius: theme.shadows?.blur || 8,
+    elevation: theme.shadows?.elevation || 5,
+    marginBottom: theme.spacing?.sm || 8,
   },
   coverImage: {
     width: '100%',
@@ -222,11 +228,11 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   coverImageStyle: {
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
   },
   defaultCover: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.primaryColor,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -241,29 +247,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  editButtonText: {
-    fontSize: 16,
-    color: 'white',
-  },
   profileInfo: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingHorizontal: theme.spacing?.md || 16,
+    paddingBottom: theme.spacing?.lg || 20,
     position: 'relative',
   },
   avatarContainer: {
     position: 'absolute',
-    left: 16,
-    backgroundColor: 'white',
+    left: theme.spacing?.md || 16,
+    backgroundColor: theme.surfaceColor || theme.backgroundColor,
     borderRadius: 50,
     padding: 4,
-    shadowColor: '#000',
+    shadowColor: theme.shadows?.color || '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: theme.shadows?.offset?.y || 2,
     },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: theme.shadows?.opacity || 0.2,
+    shadowRadius: theme.shadows?.blur || 4,
+    elevation: theme.shadows?.elevation || 4,
   },
   avatar: {
     width: '100%',
@@ -273,12 +275,12 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   defaultAvatar: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.primaryColor,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
-    color: 'white',
+    color: theme.surfaceColor || 'white',
     fontWeight: '700',
   },
   userInfo: {
@@ -288,22 +290,23 @@ const styles = StyleSheet.create({
   displayName: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#333',
+    color: theme.textColor,
     marginBottom: 4,
   },
   username: {
     fontSize: 16,
-    color: '#007AFF',
+    color: theme.accentColor || theme.primaryColor,
     marginBottom: 12,
   },
   bio: {
     fontSize: 15,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.8,
     lineHeight: 22,
     marginBottom: 12,
   },
   metaInfo: {
-    marginBottom: 16,
+    marginBottom: theme.spacing?.md || 16,
   },
   metaItem: {
     flexDirection: 'row',
@@ -312,19 +315,20 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 13,
-    color: '#999',
+    color: theme.textColor,
+    opacity: 0.6,
     marginBottom: 4,
   },
   socialLinksContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: theme.spacing?.xs || 8,
   },
   socialLinkButton: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: theme.secondaryColor || theme.surfaceColor,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: theme.borderRadius || 16,
   },
   socialLinkContent: {
     flexDirection: 'row',
@@ -332,19 +336,19 @@ const styles = StyleSheet.create({
   },
   socialLinkText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.8,
     fontWeight: '500',
   },
   statsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 32,
-    paddingHorizontal: 24,
+    paddingVertical: theme.spacing?.xl || 32,
+    paddingHorizontal: theme.spacing?.lg || 24,
     borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-    backgroundColor: '#f8f9fa',
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
+    borderTopColor: theme.textColor + '20', // 20% opacity
+    backgroundColor: theme.secondaryColor || theme.surfaceColor,
+    width: '100%',
   },
   statItem: {
     alignItems: 'center',
@@ -352,11 +356,12 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#333',
+    color: theme.textColor,
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: theme.textColor,
+    opacity: 0.6,
     marginTop: 4,
   },
 });

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store';
 import { ThemeConfig, DEFAULT_THEMES } from '../types/modspace.types';
 import { updateModSpaceTheme } from '../store/modspaceSlice';
 
@@ -47,6 +48,7 @@ const MAX_HISTORY_LENGTH = 10;
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const dispatch = useDispatch();
+  const { currentModSpace } = useSelector((state: RootState) => state.modspace);
   
   const [currentTheme, setCurrentTheme] = useState<ThemeConfig>(DEFAULT_THEMES.light);
   const [availableThemes, setAvailableThemes] = useState<Record<string, ThemeConfig>>(DEFAULT_THEMES);
@@ -62,17 +64,31 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     loadStoredTheme();
   }, []);
 
+  // Synchronize with ModSpace theme changes
+  useEffect(() => {
+    if (currentModSpace?.theme && currentModSpace.theme.id !== currentTheme.id) {
+      setCurrentTheme(currentModSpace.theme);
+      saveThemeToStorage(currentModSpace.theme).catch(console.error);
+    }
+  }, [currentModSpace?.theme, currentTheme.id]);
+
   const loadStoredTheme = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Load current theme
-      const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-      if (storedTheme) {
-        const theme: ThemeConfig = JSON.parse(storedTheme);
-        setCurrentTheme(theme);
-        dispatch(updateModSpaceTheme(theme));
+      // Priority 1: Use ModSpace theme if available
+      if (currentModSpace?.theme) {
+        setCurrentTheme(currentModSpace.theme);
+        await saveThemeToStorage(currentModSpace.theme);
+      } else {
+        // Priority 2: Load from AsyncStorage
+        const storedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+        if (storedTheme) {
+          const theme: ThemeConfig = JSON.parse(storedTheme);
+          setCurrentTheme(theme);
+          dispatch(updateModSpaceTheme(theme));
+        }
       }
 
       // Load custom themes
