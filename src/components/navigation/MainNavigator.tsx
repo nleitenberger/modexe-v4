@@ -6,12 +6,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { useOrientation } from '../../utils/useOrientation';
 import JournalEditor from '../journal/JournalEditor';
 import ModSpaceProfile from '../modspace/ModSpaceProfile';
+import Icon, { IconName } from '../common/Icon';
 
-// Icons - using emoji for now, can be replaced with proper icon library later
-const TabIcons = {
-  modspace: '👤',
-  discover: '🌟',
-  settings: '⚙️',
+// Minimalistic SVG icons
+const TabIcons: Record<string, IconName> = {
+  modspace: 'user',
+  discover: 'discover',
+  settings: 'settings',
 };
 
 export type MainTabParamList = {
@@ -35,32 +36,16 @@ const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = '';
-          
-          switch (route.name) {
-            case 'ModSpace':
-              iconName = TabIcons.modspace;
-              break;
-            case 'Discover':
-              iconName = TabIcons.discover;
-              break;
-            case 'Settings':
-              iconName = TabIcons.settings;
-              break;
-            default:
-              iconName = '❓';
-          }
+        tabBarIcon: ({ focused, color }) => {
+          const iconName = TabIcons[route.name] || 'question';
 
           return (
-            <Text
-              style={{
-                fontSize: focused ? size + 2 : size,
-                opacity: focused ? 1 : 0.7,
-              }}
-            >
-              {iconName}
-            </Text>
+            <Icon
+              name={iconName}
+              size="lg"
+              color={focused ? color : '#999'}
+              style={{ opacity: focused ? 1 : 0.7 }}
+            />
           );
         },
         tabBarActiveTintColor: '#007AFF',
@@ -126,7 +111,6 @@ const MainNavigator: React.FC = () => {
           options={{
             headerShown: true,
             headerTitle: 'Journal Editor',
-            headerBackTitleVisible: false,
             headerTintColor: '#007AFF',
             headerStyle: {
               backgroundColor: '#f8f8f8',
@@ -150,12 +134,12 @@ const PlaceholderScreen: React.FC = () => {
       padding: 20,
       backgroundColor: '#f5f5f5',
     }}>
+      <Icon name="construction" size="xl" color="#666" style={{ marginBottom: 8 }} />
       <Text style={{ fontSize: 18, color: '#666' }}>
-        Coming Soon! 🚧
+        Coming Soon!
       </Text>
     </View>
   );
 };
 
 export default MainNavigator;
-export type { RootStackParamList };

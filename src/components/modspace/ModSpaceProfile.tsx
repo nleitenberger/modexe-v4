@@ -19,6 +19,7 @@ import ProfileHeader from './widgets/ProfileHeader';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
+import Icon from '../common/Icon';
 
 const ModSpaceProfile: React.FC = () => {
   const dispatch = useDispatch();
@@ -26,16 +27,29 @@ const ModSpaceProfile: React.FC = () => {
   const { currentModSpace, isLoading } = useSelector(
     (state: RootState) => state.modspace
   );
-  const { currentJournal } = useSelector(
-    (state: RootState) => state.journal
-  );
   const { isPortrait } = useOrientation();
   const [showCreateModal, setShowCreateModal] = React.useState(false);
   const [journalTitle, setJournalTitle] = React.useState('');
+  const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
+
+  const handleNewEntryPress = () => {
+    setShowNewEntryOptions(true);
+  };
 
   const handleCreateJournal = () => {
+    setShowNewEntryOptions(false);
     setShowCreateModal(true);
     setJournalTitle(`Journal Entry - ${new Date().toLocaleDateString()}`);
+  };
+
+  const handleCreateMedia = () => {
+    setShowNewEntryOptions(false);
+    // TODO: Implement media creation functionality
+    Alert.alert('Media Post', 'Media post creation coming soon!');
+  };
+
+  const handleCancelNewEntry = () => {
+    setShowNewEntryOptions(false);
   };
 
   const handleConfirmCreate = () => {
@@ -55,9 +69,6 @@ const ModSpaceProfile: React.FC = () => {
     setJournalTitle('');
   };
 
-  const handleContinueJournal = () => {
-    navigation.navigate('JournalEditor');
-  };
 
   useEffect(() => {
     // Create a default ModSpace if none exists
@@ -84,7 +95,10 @@ const ModSpaceProfile: React.FC = () => {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Welcome to ModSpace! 🚀</Text>
+          <View style={styles.emptyTextContainer}>
+            <Text style={styles.emptyText}>Welcome to ModSpace!</Text>
+            <Icon name="rocket" size="md" color="#007AFF" style={{ marginLeft: 8 }} />
+          </View>
           <Text style={styles.emptySubText}>
             Your personal profile and content hub
           </Text>
@@ -113,74 +127,37 @@ const ModSpaceProfile: React.FC = () => {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header */}
+        {/* Profile Header with integrated stats */}
         <ProfileHeader modspace={currentModSpace} />
 
-        {/* Journal Actions */}
-        <View style={styles.journalActionsContainer}>
-          {currentJournal && (
-            <TouchableOpacity 
-              style={[styles.journalActionButton, styles.continueJournalButton]}
-              onPress={handleContinueJournal}
-            >
-              <Text style={styles.journalActionIcon}>📖</Text>
-              <View style={styles.journalActionTextContainer}>
-                <Text style={styles.journalActionTitle}>Continue "{currentJournal.title}"</Text>
-                <Text style={styles.journalActionSubtitle}>
-                  {currentJournal.pages.length} pages • Last updated {currentJournal.updatedAt.toLocaleDateString()}
-                </Text>
-              </View>
-              <Text style={styles.journalActionArrow}>→</Text>
-            </TouchableOpacity>
-          )}
-          
+        {/* Quick Actions */}
+        <View style={styles.quickActionsContainer}>
           <TouchableOpacity 
-            style={[styles.journalActionButton, styles.createJournalButton]}
-            onPress={handleCreateJournal}
+            style={styles.actionButton}
+            onPress={handleNewEntryPress}
           >
-            <Text style={styles.journalActionIcon}>📝</Text>
-            <View style={styles.journalActionTextContainer}>
-              <Text style={styles.journalActionTitle}>
-                {currentJournal ? 'Create New Journal Entry' : 'Start Your First Journal'}
-              </Text>
-              <Text style={styles.journalActionSubtitle}>
-                {currentJournal ? 'Begin a fresh story' : 'Start writing your story'}
-              </Text>
+            <View style={styles.actionButtonContent}>
+              <Icon name="new-entry" size="sm" color="#333" style={{ marginRight: 6 }} />
+              <Text style={styles.actionButtonText}>New Entry</Text>
             </View>
-            <Text style={styles.journalActionArrow}>→</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionButtonContent}>
+              <Icon name="share" size="sm" color="#333" style={{ marginRight: 6 }} />
+              <Text style={styles.actionButtonText}>Share Entry</Text>
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+            <View style={styles.actionButtonContent}>
+              <Icon name="customize" size="sm" color="#333" style={{ marginRight: 6 }} />
+              <Text style={styles.actionButtonText}>Customize</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
         {/* Content Sections */}
         <View style={styles.contentContainer}>
           
-          {/* Stats Section */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {currentModSpace.stats.totalEntries}
-              </Text>
-              <Text style={styles.statLabel}>Entries</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {currentModSpace.stats.totalViews}
-              </Text>
-              <Text style={styles.statLabel}>Views</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {currentModSpace.stats.followers}
-              </Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>
-                {currentModSpace.stats.following}
-              </Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
-          </View>
 
           {/* Shared Entries Section */}
           <View style={styles.sectionContainer}>
@@ -195,16 +172,31 @@ const ModSpaceProfile: React.FC = () => {
                 </Text>
               </View>
             ) : (
-              <View style={styles.entriesGrid}>
+              <View style={[
+                styles.entriesGrid,
+                isPortrait ? styles.entriesVertical : styles.entriesHorizontal
+              ]}>
                 {currentModSpace.sharedEntries.map((entry) => (
-                  <TouchableOpacity key={entry.id} style={styles.entryCard}>
+                  <TouchableOpacity 
+                    key={entry.id} 
+                    style={[
+                      styles.entryCard,
+                      isPortrait ? styles.entryCardVertical : styles.entryCardHorizontal
+                    ]}
+                  >
                     <Text style={styles.entryTitle}>{entry.title}</Text>
                     <Text style={styles.entryExcerpt} numberOfLines={3}>
                       {entry.excerpt}
                     </Text>
                     <View style={styles.entryStats}>
-                      <Text style={styles.entryStatText}>❤️ {entry.likes}</Text>
-                      <Text style={styles.entryStatText}>👁 {entry.views}</Text>
+                      <View style={styles.entryStatContainer}>
+                        <Icon name="heart" size="xs" color="#FF3B30" style={{ marginRight: 4 }} />
+                        <Text style={styles.entryStatText}>{entry.likes}</Text>
+                      </View>
+                      <View style={styles.entryStatContainer}>
+                        <Icon name="discover" size="xs" color="#999" style={{ marginRight: 4 }} />
+                        <Text style={styles.entryStatText}>{entry.views}</Text>
+                      </View>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -231,27 +223,57 @@ const ModSpaceProfile: React.FC = () => {
             )}
           </View>
 
-          {/* Quick Actions */}
-          <View style={styles.quickActionsContainer}>
-            <TouchableOpacity 
-              style={styles.actionButton}
-              onPress={handleCreateJournal}
-            >
-              <Text style={styles.actionButtonText}>📝 New Entry</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>📤 Share Entry</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>📷 Add Media</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Text style={styles.actionButtonText}>🎨 Customize</Text>
-            </TouchableOpacity>
-          </View>
 
         </View>
       </ScrollView>
+
+      {/* New Entry Options Modal */}
+      <Modal
+        visible={showNewEntryOptions}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelNewEntry}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create New Entry</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose the type of content you'd like to create
+            </Text>
+            
+            <View style={styles.entryOptionsContainer}>
+              <TouchableOpacity 
+                style={styles.entryOption}
+                onPress={handleCreateJournal}
+              >
+                <Icon name="edit" size="xl" color="#007AFF" />
+                <Text style={styles.entryOptionTitle}>Journal Entry</Text>
+                <Text style={styles.entryOptionDescription}>
+                  Write and design with text and stickers
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.entryOption}
+                onPress={handleCreateMedia}
+              >
+                <Icon name="media" size="xl" color="#34C759" />
+                <Text style={styles.entryOptionTitle}>Media Post</Text>
+                <Text style={styles.entryOptionDescription}>
+                  Share photos, videos, or other media
+                </Text>
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={handleCancelNewEntry}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Create Journal Modal */}
       <Modal
@@ -319,6 +341,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 32,
   },
+  emptyTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   emptyText: {
     fontSize: 24,
     fontWeight: '600',
@@ -351,35 +378,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     marginTop: 16,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'white',
-    borderRadius: 12,
-    paddingVertical: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
   },
   sectionContainer: {
     marginBottom: 24,
@@ -418,6 +416,14 @@ const styles = StyleSheet.create({
   entriesGrid: {
     gap: 16,
   },
+  entriesVertical: {
+    flexDirection: 'column',
+  },
+  entriesHorizontal: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
   entryCard: {
     backgroundColor: 'white',
     borderRadius: 12,
@@ -430,6 +436,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  entryCardVertical: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  entryCardHorizontal: {
+    width: '48%',
+    marginBottom: 16,
   },
   entryTitle: {
     fontSize: 16,
@@ -447,6 +461,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
   },
+  entryStatContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   entryStatText: {
     fontSize: 12,
     color: '#999',
@@ -460,11 +478,12 @@ const styles = StyleSheet.create({
   },
   quickActionsContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: 12,
-    marginTop: 16,
+    marginBottom: 24,
   },
   actionButton: {
+    flex: 1,
     backgroundColor: 'white',
     borderRadius: 8,
     paddingHorizontal: 16,
@@ -477,59 +496,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-    minWidth: 100,
+    alignItems: 'center',
+  },
+  actionButtonContent: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
   actionButtonText: {
     fontSize: 14,
     fontWeight: '500',
     color: '#333',
-  },
-  journalActionsContainer: {
-    marginBottom: 24,
-    gap: 12,
-  },
-  journalActionButton: {
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  createJournalButton: {
-    backgroundColor: '#007AFF',
-  },
-  continueJournalButton: {
-    backgroundColor: '#34C759',
-  },
-  journalActionIcon: {
-    fontSize: 32,
-    marginRight: 16,
-  },
-  journalActionTextContainer: {
-    flex: 1,
-  },
-  journalActionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
-    marginBottom: 4,
-  },
-  journalActionSubtitle: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
-  journalActionArrow: {
-    fontSize: 20,
-    color: 'white',
-    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -600,6 +576,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: 'white',
+  },
+  entryOptionsContainer: {
+    gap: 16,
+    marginBottom: 20,
+  },
+  entryOption: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  entryOptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  entryOptionDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 

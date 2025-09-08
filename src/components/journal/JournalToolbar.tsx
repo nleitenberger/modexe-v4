@@ -17,6 +17,7 @@ import { togglePalette } from '../../store/stickerSlice';
 import { shareJournalEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { useOrientation } from '../../utils/useOrientation';
+import Icon from '../common/Icon';
 
 const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
@@ -192,14 +193,17 @@ const JournalToolbar: React.FC = () => {
             style={styles.postButton}
             onPress={handleOpenPostModal}
           >
-            <Text style={styles.postButtonText}>📤 Post</Text>
+            <View style={styles.postButtonContent}>
+              <Icon name="post" size="sm" color="white" style={{ marginRight: 6 }} />
+              <Text style={styles.postButtonText}>Post</Text>
+            </View>
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[styles.toolButton, isPaletteExpanded && styles.activeButton]}
             onPress={handleToggleStickers}
           >
-            <Text style={styles.toolButtonText}>🎨</Text>
+            <Icon name="palette" size="md" color={isPaletteExpanded ? "white" : "#333"} />
           </TouchableOpacity>
         </View>
       </View>
@@ -273,12 +277,20 @@ const JournalToolbar: React.FC = () => {
                     ]}
                     onPress={() => setPostVisibility('public')}
                   >
-                    <Text style={[
-                      styles.visibilityOptionText,
-                      postVisibility === 'public' && styles.selectedVisibilityOptionText,
-                    ]}>
-                      🌍 Public
-                    </Text>
+                    <View style={styles.visibilityOptionContent}>
+                      <Icon 
+                        name="public" 
+                        size="sm" 
+                        color={postVisibility === 'public' ? "white" : "#666"} 
+                        style={{ marginRight: 6 }} 
+                      />
+                      <Text style={[
+                        styles.visibilityOptionText,
+                        postVisibility === 'public' && styles.selectedVisibilityOptionText,
+                      ]}>
+                        Public
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
@@ -287,12 +299,20 @@ const JournalToolbar: React.FC = () => {
                     ]}
                     onPress={() => setPostVisibility('private')}
                   >
-                    <Text style={[
-                      styles.visibilityOptionText,
-                      postVisibility === 'private' && styles.selectedVisibilityOptionText,
-                    ]}>
-                      🔒 Private
-                    </Text>
+                    <View style={styles.visibilityOptionContent}>
+                      <Icon 
+                        name="private" 
+                        size="sm" 
+                        color={postVisibility === 'private' ? "white" : "#666"} 
+                        style={{ marginRight: 6 }} 
+                      />
+                      <Text style={[
+                        styles.visibilityOptionText,
+                        postVisibility === 'private' && styles.selectedVisibilityOptionText,
+                      ]}>
+                        Private
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -516,6 +536,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: 'white',
+  },
+  postButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  visibilityOptionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });
 

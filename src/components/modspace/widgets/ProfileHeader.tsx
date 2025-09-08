@@ -12,6 +12,7 @@ import { ModSpace } from '../../../types/modspace.types';
 import { RootState } from '../../../store';
 import { setEditMode } from '../../../store/modspaceSlice';
 import { useOrientation } from '../../../utils/useOrientation';
+import Icon from '../../common/Icon';
 
 interface ProfileHeaderProps {
   modspace: ModSpace;
@@ -57,7 +58,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       >
         {!modspace.coverImage && (
           <View style={[styles.defaultCover, { height: headerHeight * 0.6 }]}>
-            <Text style={styles.defaultCoverText}>📖</Text>
+            <Icon name="book" size={48} color="rgba(255, 255, 255, 0.8)" />
           </View>
         )}
         
@@ -66,9 +67,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
           style={styles.editButton}
           onPress={handleEditProfile}
         >
-          <Text style={styles.editButtonText}>
-            {isEditMode ? '✓' : '✏️'}
-          </Text>
+          <Icon 
+            name={isEditMode ? 'check' : 'edit'} 
+            size="sm" 
+            color="white" 
+          />
         </TouchableOpacity>
       </ImageBackground>
 
@@ -114,13 +117,19 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
 
           {/* Join Date & Last Active */}
           <View style={styles.metaInfo}>
-            <Text style={styles.metaText}>
-              📅 Joined {formatJoinDate(modspace.stats.joinDate)}
-            </Text>
-            {modspace.privacy.showLastActive && (
+            <View style={styles.metaItem}>
+              <Icon name="calendar" size="xs" color="#999" style={{ marginRight: 6 }} />
               <Text style={styles.metaText}>
-                🟢 Active recently
+                Joined {formatJoinDate(modspace.stats.joinDate)}
               </Text>
+            </View>
+            {modspace.privacy.showLastActive && (
+              <View style={styles.metaItem}>
+                <Icon name="active" size="xs" color="#34C759" style={{ marginRight: 6 }} />
+                <Text style={styles.metaText}>
+                  Active recently
+                </Text>
+              </View>
             )}
           </View>
 
@@ -135,30 +144,61 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
                     key={link.id} 
                     style={styles.socialLinkButton}
                   >
-                    <Text style={styles.socialLinkText}>
-                      {getSocialIcon(link.platform)} {link.displayName || link.platform}
-                    </Text>
+                    <View style={styles.socialLinkContent}>
+                      <Icon name={getSocialIconName(link.platform)} size="sm" color="#666" style={{ marginRight: 4 }} />
+                      <Text style={styles.socialLinkText}>
+                        {link.displayName || link.platform}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
             </View>
           )}
         </View>
       </View>
+
+      {/* Stats Section - Outside of profileInfo to span full width */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>
+            {modspace.stats.totalEntries}
+          </Text>
+          <Text style={styles.statLabel}>Entries</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>
+            {modspace.stats.totalViews}
+          </Text>
+          <Text style={styles.statLabel}>Views</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>
+            {modspace.stats.followers}
+          </Text>
+          <Text style={styles.statLabel}>Followers</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>
+            {modspace.stats.following}
+          </Text>
+          <Text style={styles.statLabel}>Following</Text>
+        </View>
+      </View>
     </View>
   );
 };
 
-// Helper function to get social platform icons
-const getSocialIcon = (platform: string): string => {
-  const icons: Record<string, string> = {
-    instagram: '📷',
-    twitter: '🐦',
-    tiktok: '🎵',
-    youtube: '📺',
-    website: '🌐',
-    other: '🔗',
+// Helper function to get social platform icon names
+const getSocialIconName = (platform: string) => {
+  const iconNames: Record<string, any> = {
+    instagram: 'instagram',
+    twitter: 'twitter',
+    tiktok: 'tiktok',
+    youtube: 'youtube',
+    website: 'website',
+    other: 'link',
   };
-  return icons[platform] || icons.other;
+  return iconNames[platform] || iconNames.other;
 };
 
 const styles = StyleSheet.create({
@@ -189,10 +229,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  defaultCoverText: {
-    fontSize: 48,
-    opacity: 0.8,
   },
   editButton: {
     position: 'absolute',
@@ -269,6 +305,11 @@ const styles = StyleSheet.create({
   metaInfo: {
     marginBottom: 16,
   },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   metaText: {
     fontSize: 13,
     color: '#999',
@@ -285,10 +326,38 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
   },
+  socialLinkContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   socialLinkText: {
     fontSize: 12,
     color: '#666',
     fontWeight: '500',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+    backgroundColor: '#f8f9fa',
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
   },
 });
 

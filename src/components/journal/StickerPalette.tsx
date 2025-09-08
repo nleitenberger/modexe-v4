@@ -12,6 +12,7 @@ import { RootState } from '../../store';
 import { setActiveCategory, togglePalette } from '../../store/stickerSlice';
 import { addSticker } from '../../store/journalSlice';
 import { Sticker, StickerInstance } from '../../types/sticker.types';
+import Icon from '../common/Icon';
 
 const StickerPalette: React.FC = () => {
   const dispatch = useDispatch();
@@ -74,7 +75,7 @@ const StickerPalette: React.FC = () => {
       <View style={styles.header}>
         <Text style={styles.title}>Stickers</Text>
         <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-          <Text style={styles.closeButtonText}>×</Text>
+          <Icon name="close" size="sm" color="#666" />
         </TouchableOpacity>
       </View>
 
