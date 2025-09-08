@@ -55,4 +55,5 @@ export interface JournalState {
   isDirty: boolean;
   isLoading: boolean;
   error: string | null;
+  originalSharedEntryId: string | null; // Track the original shared entry if editing
 }

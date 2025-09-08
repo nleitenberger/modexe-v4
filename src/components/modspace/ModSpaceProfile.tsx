@@ -9,6 +9,7 @@ import {
   Modal,
   TextInput,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -17,11 +18,15 @@ import { createJournal } from '../../store/journalSlice';
 import { useOrientation } from '../../utils/useOrientation';
 import ProfileHeader from './widgets/ProfileHeader';
 import CustomizationPanel from './CustomizationPanel';
+import LayoutRenderer from './LayoutRenderer';
+import JournalFullscreenViewer from './JournalFullscreenViewer';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
 import { useTheme } from '../../contexts/ThemeContext';
 import { SharedContentItem } from '../../types/modspace.types';
+import { loadJournal, loadJournalFromSharedEntry } from '../../store/journalSlice';
+import JournalReconstructionService from '../../services/JournalReconstructionService';
 import Icon from '../common/Icon';
 
 // Utility function to combine journal entries and media items into unified content
@@ -71,9 +76,21 @@ const combineSharedContent = (modspace: any): SharedContentItem[] => {
   }
   
   // Sort by creation date (newest first)
-  return unifiedContent.sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return unifiedContent.sort((a, b) => {
+    try {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      
+      // Handle invalid dates by treating them as very old (epoch time)
+      const timeA = isNaN(dateA.getTime()) ? 0 : dateA.getTime();
+      const timeB = isNaN(dateB.getTime()) ? 0 : dateB.getTime();
+      
+      return timeB - timeA;
+    } catch (error) {
+      console.warn('Error sorting by date:', error);
+      return 0; // Keep original order if there's an error
+    }
+  });
 };
 
 const ModSpaceProfile: React.FC = () => {
@@ -86,6 +103,8 @@ const ModSpaceProfile: React.FC = () => {
   const { currentTheme } = useTheme();
   const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
   const [showCustomizationPanel, setShowCustomizationPanel] = React.useState(false);
+  const [selectedEntry, setSelectedEntry] = React.useState<SharedContentItem | null>(null);
+  const [showFullscreenViewer, setShowFullscreenViewer] = React.useState(false);
   
   // Create theme-aware styles
   const themedStyles = createThemedStyles(currentTheme);
@@ -127,6 +146,140 @@ const ModSpaceProfile: React.FC = () => {
   const handleCustomizationSave = () => {
     // The CustomizationPanel handles saving internally
     console.log('Customization saved successfully');
+  };
+
+  const handleEntryFullscreen = (entry: SharedContentItem) => {
+    setSelectedEntry(entry);
+    setShowFullscreenViewer(true);
+  };
+
+  const handleEntryEdit = (entry: SharedContentItem) => {
+    if (entry.type === 'journal') {
+      // Check if we can reconstruct the journal
+      if (JournalReconstructionService.canReconstructJournal(entry)) {
+        Alert.alert(
+          'Edit Journal Entry',
+          `How would you like to edit "${entry.title}"?`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Edit Original',
+              onPress: () => handleEditOriginalJournal(entry),
+            },
+            {
+              text: 'Edit as Copy',
+              onPress: () => handleEditJournalCopy(entry),
+            },
+          ]
+        );
+      } else {
+        // Fallback if we can't reconstruct
+        Alert.alert(
+          'Edit Not Available',
+          'This journal entry cannot be edited. You can create a new journal based on this content.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Create New',
+              onPress: () => {
+                const newTitle = `Inspired by ${entry.title}`;
+                dispatch(createJournal({ title: newTitle }));
+                navigation.navigate('JournalEditor');
+              },
+            },
+          ]
+        );
+      }
+    } else {
+      Alert.alert('Edit', 'Media items cannot be edited in the journal editor');
+    }
+  };
+
+  const handleEditOriginalJournal = (entry: SharedContentItem) => {
+    try {
+      // Reconstruct the journal from shared entry data
+      const reconstructedJournal = JournalReconstructionService.reconstructJournalFromSharedEntry(entry);
+      
+      // Validate the reconstructed journal
+      if (JournalReconstructionService.validateReconstructedJournal(reconstructedJournal)) {
+        // Load the journal into the editor with shared entry tracking
+        dispatch(loadJournalFromSharedEntry({ 
+          journal: reconstructedJournal, 
+          sharedEntryId: entry.id 
+        }));
+        navigation.navigate('JournalEditor');
+      } else {
+        throw new Error('Reconstructed journal failed validation');
+      }
+    } catch (error) {
+      console.error('Error reconstructing journal:', error);
+      Alert.alert(
+        'Error',
+        'Could not load the journal for editing. Please try creating a copy instead.',
+        [
+          { text: 'OK' },
+          {
+            text: 'Create Copy',
+            onPress: () => handleEditJournalCopy(entry),
+          },
+        ]
+      );
+    }
+  };
+
+  const handleEditJournalCopy = (entry: SharedContentItem) => {
+    try {
+      // Create a copy of the journal for editing
+      const journalCopy = JournalReconstructionService.createJournalCopyFromSharedEntry(entry);
+      
+      // Load the copy into the editor
+      dispatch(loadJournal(journalCopy));
+      navigation.navigate('JournalEditor');
+    } catch (error) {
+      console.error('Error creating journal copy:', error);
+      Alert.alert('Error', 'Could not create a copy of the journal');
+    }
+  };
+
+  const handleEntryDelete = (entry: SharedContentItem) => {
+    Alert.alert(
+      'Delete Entry',
+      `Are you sure you want to delete "${entry.title}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // TODO: Implement delete functionality
+            console.log('Delete entry:', entry.id);
+            Alert.alert('Success', 'Entry deleted successfully');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleFullscreenClose = () => {
+    setShowFullscreenViewer(false);
+    setSelectedEntry(null);
+  };
+
+  const handleFullscreenEdit = () => {
+    if (selectedEntry) {
+      handleFullscreenClose();
+      // Use a slight delay to ensure the modal closes smoothly before showing the edit dialog
+      setTimeout(() => {
+        handleEntryEdit(selectedEntry);
+      }, 100);
+    }
+  };
+
+  const handleFullscreenDelete = () => {
+    if (selectedEntry) {
+      handleFullscreenClose();
+      handleEntryDelete(selectedEntry);
+    }
   };
 
 
@@ -179,13 +332,13 @@ const ModSpaceProfile: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={themedStyles.container}>
+    <View style={themedStyles.container}>
       <ScrollView 
         style={themedStyles.scrollView}
         contentContainerStyle={themedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Header with integrated stats */}
+        {/* Profile Header with integrated stats - extends into notch area */}
         <ProfileHeader modspace={currentModSpace} />
 
         {/* Quick Actions */}
@@ -219,102 +372,41 @@ const ModSpaceProfile: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Content Sections */}
+        {/* Content Section Header */}
         <View style={[
-          themedStyles.contentContainer,
+          themedStyles.contentHeader,
           { paddingHorizontal: isPortrait ? 16 : 32 }
         ]}>
-          
-
-          {/* Unified Content Section */}
-          <View style={themedStyles.sectionContainer}>
-            <Text style={themedStyles.sectionTitle}>My Content</Text>
-            {sharedContent.length === 0 ? (
-              <View style={themedStyles.emptySection}>
-                <Text style={themedStyles.emptySectionText}>
-                  No content shared yet
-                </Text>
-                <Text style={themedStyles.emptySectionSubText}>
-                  Share your journal entries and media to showcase your creativity
-                </Text>
-              </View>
-            ) : (
-              <View style={[
-                themedStyles.entriesGrid,
-                isPortrait ? themedStyles.entriesVertical : themedStyles.entriesHorizontal
-              ]}>
-                {sharedContent.map((item) => (
-                  <TouchableOpacity 
-                    key={item.id} 
-                    style={[
-                      themedStyles.entryCard,
-                      isPortrait ? themedStyles.entryCardVertical : themedStyles.entryCardHorizontal
-                    ]}
-                  >
-                    {/* Content Type Icon */}
-                    <View style={themedStyles.contentTypeIndicator}>
-                      <Icon 
-                        name={item.type === 'journal' ? 'edit' : 'media'} 
-                        size="xs" 
-                        color={item.type === 'journal' ? currentTheme.primaryColor : currentTheme.successColor || '#34C759'} 
-                        style={{ marginRight: 6 }} 
-                      />
-                      <Text style={themedStyles.contentTypeText}>
-                        {item.type === 'journal' ? 'Journal' : 'Media'}
-                      </Text>
-                    </View>
-
-                    {/* Media thumbnail for media items */}
-                    {item.type === 'media' && item.thumbnail && (
-                      <View style={themedStyles.mediaThumbnailContainer}>
-                        <Text style={themedStyles.mediaThumbnailPlaceholder}>
-                          {item.mediaType?.toUpperCase()} 📷
-                        </Text>
-                      </View>
-                    )}
-
-                    <Text style={themedStyles.entryTitle}>{item.title}</Text>
-                    {item.excerpt && (
-                      <Text style={themedStyles.entryExcerpt} numberOfLines={3}>
-                        {item.excerpt}
-                      </Text>
-                    )}
-
-                    {/* Tags */}
-                    {item.tags.length > 0 && (
-                      <View style={themedStyles.tagsContainer}>
-                        {item.tags.slice(0, 2).map((tag, index) => (
-                          <View key={index} style={themedStyles.tag}>
-                            <Text style={themedStyles.tagText}>#{tag}</Text>
-                          </View>
-                        ))}
-                        {item.tags.length > 2 && (
-                          <Text style={themedStyles.moreTagsText}>+{item.tags.length - 2}</Text>
-                        )}
-                      </View>
-                    )}
-
-                    <View style={themedStyles.entryStats}>
-                      <View style={themedStyles.entryStatContainer}>
-                        <Icon name="heart" size="xs" color={currentTheme.errorColor || "#FF3B30"} style={{ marginRight: 4 }} />
-                        <Text style={themedStyles.entryStatText}>{item.likes}</Text>
-                      </View>
-                      <View style={themedStyles.entryStatContainer}>
-                        <Icon name="discover" size="xs" color={currentTheme.textColor} style={{ marginRight: 4, opacity: 0.6 }} />
-                        <Text style={themedStyles.entryStatText}>{item.views}</Text>
-                      </View>
-                      <Text style={themedStyles.dateText}>
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-
-
+          <Text style={themedStyles.sectionTitle}>My Content</Text>
         </View>
+
+        {/* Content with Layout Renderer */}
+        {sharedContent.length === 0 ? (
+          <View style={[
+            themedStyles.emptySection,
+            { marginHorizontal: isPortrait ? 16 : 32 }
+          ]}>
+            <Text style={themedStyles.emptySectionText}>
+              No content shared yet
+            </Text>
+            <Text style={themedStyles.emptySectionSubText}>
+              Share your journal entries and media to showcase your creativity
+            </Text>
+          </View>
+        ) : (
+          <LayoutRenderer
+            layout={currentModSpace.layout}
+            content={sharedContent}
+            onEntryPress={handleEntryFullscreen}
+            onEntryLongPress={(entry) => {
+              // TODO: Show context menu
+              console.log('Entry long pressed:', entry.id);
+            }}
+            onEntryEdit={handleEntryEdit}
+            onEntryDelete={handleEntryDelete}
+            onEntryFullscreen={handleEntryFullscreen}
+          />
+        )}
       </ScrollView>
 
       {/* New Entry Options Modal */}
@@ -372,17 +464,47 @@ const ModSpaceProfile: React.FC = () => {
         onSave={handleCustomizationSave}
       />
 
-    </SafeAreaView>
+      {/* Fullscreen Journal Viewer */}
+      <JournalFullscreenViewer
+        visible={showFullscreenViewer}
+        entry={selectedEntry ? {
+          // Convert SharedContentItem to SharedJournalEntry format for the viewer
+          id: selectedEntry.id,
+          journalId: selectedEntry.type === 'journal' ? selectedEntry.journalId || '' : selectedEntry.id,
+          journalTitle: selectedEntry.title,
+          pages: selectedEntry.type === 'journal' ? selectedEntry.pageNumbers || [1] : [1],
+          title: selectedEntry.title,
+          excerpt: selectedEntry.excerpt || '',
+          thumbnail: selectedEntry.type === 'media' ? selectedEntry.thumbnail : undefined,
+          shareDate: new Date(selectedEntry.createdAt),
+          visibility: selectedEntry.isPublic ? 'public' as const : 'private' as const,
+          likes: selectedEntry.likes,
+          views: selectedEntry.views,
+          comments: [],
+          tags: selectedEntry.tags,
+        } : null}
+        onClose={handleFullscreenClose}
+        onEdit={handleFullscreenEdit}
+        onDelete={handleFullscreenDelete}
+      />
+
+    </View>
   );
 };
 
 // Create theme-aware styles function
-const createThemedStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    width: '100%',
-    backgroundColor: theme.backgroundColor,
-  },
+const createThemedStyles = (theme: any) => {
+  const { width, height } = Dimensions.get('window');
+  const isLandscape = width > height;
+  
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      width: '100%',
+      minHeight: isLandscape ? width : height,
+      minWidth: '100%',
+      backgroundColor: theme.backgroundColor,
+    },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -435,9 +557,15 @@ const createThemedStyles = (theme: any) => StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: theme.spacing?.xl || 32,
+    flexGrow: 1,
+    minHeight: isLandscape ? '100%' : 'auto',
   },
   contentContainer: {
     marginTop: theme.spacing?.md || 16,
+  },
+  contentHeader: {
+    marginTop: theme.spacing?.md || 16,
+    marginBottom: theme.spacing?.sm || 12,
   },
   sectionContainer: {
     marginBottom: theme.spacing?.lg || 24,
@@ -705,6 +833,7 @@ const createThemedStyles = (theme: any) => StyleSheet.create({
     color: theme.textColor,
     opacity: 0.8,
   },
-});
+  });
+};
 
 export default ModSpaceProfile;

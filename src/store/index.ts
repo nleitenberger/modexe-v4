@@ -15,6 +15,7 @@ export const store = configureStore({
         ignoredActions: [
           'journal/createJournal', 
           'journal/loadJournal',
+          'journal/loadJournalFromSharedEntry',
           'journal/updatePageContent',
           'journal/addSticker',
           'journal/updateSticker',
@@ -48,6 +49,8 @@ export const store = configureStore({
         ignoredActionPaths: [
           'payload.createdAt', 
           'payload.updatedAt',
+          'payload.journal.createdAt',
+          'payload.journal.updatedAt',
           'payload.sticker.createdAt',
           'payload.updates.createdAt',
           'payload.shareDate',

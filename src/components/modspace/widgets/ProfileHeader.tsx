@@ -6,7 +6,9 @@ import {
   StyleSheet,
   ImageBackground,
   Dimensions,
+  StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { ModSpace } from '../../../types/modspace.types';
 import { RootState } from '../../../store';
@@ -26,6 +28,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
   const { isEditMode } = useSelector((state: RootState) => state.modspace);
   const { isPortrait } = useOrientation();
   const { currentTheme } = useTheme();
+  const safeAreaInsets = useSafeAreaInsets();
 
   const handleEditProfile = () => {
     dispatch(setEditMode(!isEditMode));
@@ -47,22 +50,24 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       .substring(0, 2);
   };
 
-  const headerHeight = isPortrait ? 200 : 150;
+  const baseHeaderHeight = isPortrait ? 200 : 150;
+  const statusBarHeight = StatusBar.currentHeight || 0;
+  const totalHeaderHeight = baseHeaderHeight + safeAreaInsets.top;
   const avatarSize = isPortrait ? 100 : 80;
   
   // Create theme-aware styles
   const themedStyles = createThemedStyles(currentTheme);
 
   return (
-    <View style={[themedStyles.container, { minHeight: headerHeight }]}>
+    <View style={[themedStyles.container, { minHeight: totalHeaderHeight, paddingTop: safeAreaInsets.top }]}>
       {/* Cover Image */}
       <ImageBackground
         source={modspace.coverImage ? { uri: modspace.coverImage } : undefined}
-        style={[themedStyles.coverImage, { height: headerHeight * 0.6 }]}
+        style={[themedStyles.coverImage, { height: baseHeaderHeight * 0.6 }]}
         imageStyle={themedStyles.coverImageStyle}
       >
         {!modspace.coverImage && (
-          <View style={[themedStyles.defaultCover, { height: headerHeight * 0.6 }]}>
+          <View style={[themedStyles.defaultCover, { height: baseHeaderHeight * 0.6 }]}>
             <Icon name="book" size={48} color="rgba(255, 255, 255, 0.8)" />
           </View>
         )}

@@ -76,7 +76,7 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
               {
                 fontSize: page.content.textStyle.fontSize,
                 color: page.content.textStyle.color,
-                lineHeight: page.content.textStyle.lineHeight,
+                lineHeight: page.content.textStyle.fontSize * page.content.textStyle.lineHeight,
                 textAlign: page.content.textStyle.textAlign,
               },
             ]}
@@ -104,7 +104,7 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
                   {
                     fontSize: page.content.textStyle.fontSize,
                     color: page.content.textStyle.color,
-                    lineHeight: page.content.textStyle.lineHeight,
+                    lineHeight: page.content.textStyle.fontSize * page.content.textStyle.lineHeight,
                     textAlign: page.content.textStyle.textAlign,
                   },
                 ]}
@@ -172,6 +172,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     borderRadius: 8,
     minHeight: 120,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
   displayText: {
     fontFamily: 'System',

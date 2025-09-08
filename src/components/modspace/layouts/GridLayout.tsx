@@ -10,6 +10,9 @@ interface GridLayoutProps {
   config: LayoutConfig;
   onEntryPress?: (entry: SharedJournalEntry) => void;
   onEntryLongPress?: (entry: SharedJournalEntry) => void;
+  onEntryEdit?: (entry: SharedJournalEntry) => void;
+  onEntryDelete?: (entry: SharedJournalEntry) => void;
+  onEntryFullscreen?: (entry: SharedJournalEntry) => void;
 }
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -18,7 +21,10 @@ const GridLayout: React.FC<GridLayoutProps> = ({
   entries, 
   config, 
   onEntryPress, 
-  onEntryLongPress 
+  onEntryLongPress,
+  onEntryEdit,
+  onEntryDelete,
+  onEntryFullscreen
 }) => {
   const { currentTheme } = useTheme();
   const { isPortrait } = useOrientation();
@@ -85,6 +91,10 @@ const GridLayout: React.FC<GridLayoutProps> = ({
             aspectRatio={config.aspectRatio}
             onPress={() => onEntryPress?.(entry)}
             onLongPress={() => onEntryLongPress?.(entry)}
+            onEdit={() => onEntryEdit?.(entry)}
+            onDelete={() => onEntryDelete?.(entry)}
+            onFullscreen={() => onEntryFullscreen?.(entry)}
+            showActions={true}
           />
         </View>
       ))}

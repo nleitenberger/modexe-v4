@@ -11,7 +11,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { togglePalette } from '../../store/stickerSlice';
-import { shareJournalEntry } from '../../store/modspaceSlice';
+import { shareJournalEntry, updateSharedEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { generateSharedEntryId } from '../../utils/uniqueId';
 import Icon from '../common/Icon';
@@ -21,7 +21,7 @@ import { RootStackParamList } from '../navigation/MainNavigator';
 
 const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
-  const { currentJournal } = useSelector((state: RootState) => state.journal);
+  const { currentJournal, originalSharedEntryId } = useSelector((state: RootState) => state.journal);
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [showPostModal, setShowPostModal] = React.useState(false);
@@ -54,30 +54,57 @@ const JournalToolbar: React.FC = () => {
     const firstPageContent = currentJournal.pages[0]?.content.text || '';
     const excerpt = firstPageContent.slice(0, 150) + (firstPageContent.length > 150 ? '...' : '');
 
-    const sharedEntry: SharedJournalEntry = {
-      id: generateSharedEntryId(),
-      journalId: currentJournal.id,
-      journalTitle: currentJournal.title,
-      pages: allPageIndices,
-      title: currentJournal.title,
-      excerpt: excerpt || 'A new journal entry',
-      shareDate: new Date(),
-      visibility,
-      likes: 0,
-      views: 0,
-      comments: [],
-      tags: [],
-    };
+    // Check if this is an update to an existing shared entry
+    if (originalSharedEntryId) {
+      // Update existing shared entry
+      const updates = {
+        title: currentJournal.title,
+        excerpt: excerpt || 'A new journal entry',
+        visibility,
+        journalTitle: currentJournal.title,
+        pages: allPageIndices,
+        // Note: We don't update journalId since it should remain the same for the original entry
+      };
 
-    dispatch(shareJournalEntry(sharedEntry));
-    
-    // Close modal and navigate back to ModSpace
-    setShowPostModal(false);
-    navigation.navigate('MainTabs');
-    
-    // Show success message
-    const visibilityText = visibility === 'public' ? 'publicly' : 'privately';
-    Alert.alert('Success', `Your journal entry has been posted ${visibilityText} to your ModSpace!`);
+      dispatch(updateSharedEntry({
+        entryId: originalSharedEntryId,
+        updates: updates
+      }));
+
+      // Close modal and navigate back to ModSpace
+      setShowPostModal(false);
+      navigation.navigate('MainTabs');
+      
+      // Show success message
+      const visibilityText = visibility === 'public' ? 'publicly' : 'privately';
+      Alert.alert('Success', `Your journal entry has been updated and is now ${visibilityText} visible in your ModSpace!`);
+    } else {
+      // Create new shared entry
+      const sharedEntry: SharedJournalEntry = {
+        id: generateSharedEntryId(),
+        journalId: currentJournal.id,
+        journalTitle: currentJournal.title,
+        pages: allPageIndices,
+        title: currentJournal.title,
+        excerpt: excerpt || 'A new journal entry',
+        shareDate: new Date(),
+        visibility,
+        likes: 0,
+        views: 0,
+        comments: [],
+        tags: [],
+      };
+
+      dispatch(shareJournalEntry(sharedEntry));
+      
+      // Close modal and navigate back to ModSpace
+      setShowPostModal(false);
+      navigation.navigate('MainTabs');
+      
+      // Show success message
+      const visibilityText = visibility === 'public' ? 'publicly' : 'privately';
+      Alert.alert('Success', `Your journal entry has been posted ${visibilityText} to your ModSpace!`);
+    }
   };
 
   const handleCancelPost = () => {

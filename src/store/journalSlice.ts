@@ -10,6 +10,7 @@ const initialState: JournalState = {
   isDirty: false,
   isLoading: false,
   error: null,
+  originalSharedEntryId: null, // Track the original shared entry if editing
 };
 
 const journalSlice = createSlice({
@@ -65,6 +66,7 @@ const journalSlice = createSlice({
       state.currentSpreadIndex = 0;
       state.currentPageIndex = 0;
       state.isDirty = true;
+      state.originalSharedEntryId = null; // Clear shared entry ID for new journals
     },
 
     loadJournal: (state, action: PayloadAction<Journal>) => {
@@ -74,6 +76,17 @@ const journalSlice = createSlice({
       state.isDirty = false;
       state.isLoading = false;
       state.error = null;
+      // Keep existing originalSharedEntryId if not specified
+    },
+
+    loadJournalFromSharedEntry: (state, action: PayloadAction<{ journal: Journal; sharedEntryId: string }>) => {
+      state.currentJournal = action.payload.journal;
+      state.currentSpreadIndex = 0;
+      state.currentPageIndex = 0;
+      state.isDirty = false;
+      state.isLoading = false;
+      state.error = null;
+      state.originalSharedEntryId = action.payload.sharedEntryId; // Track the original shared entry
     },
 
     updateJournalTitle: (
@@ -234,6 +247,7 @@ const journalSlice = createSlice({
 export const {
   createJournal,
   loadJournal,
+  loadJournalFromSharedEntry,
   updateJournalTitle,
   updatePageContent,
   addSticker,

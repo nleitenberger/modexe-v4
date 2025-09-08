@@ -12,7 +12,7 @@ export type IconName =
   // Social Platforms
   | 'instagram' | 'twitter' | 'tiktok' | 'youtube' | 'website' | 'link'
   // Actions
-  | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket'
+  | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket' | 'more'
   // Stickers/Emotions
   | 'smile' | 'tree' | 'flower' | 'sun' | 'moon' | 'star' | 'lightning' | 'arrow-right' | 'warning' | 'fire';
 
@@ -313,6 +313,15 @@ const Icon: React.FC<IconProps> = ({ name, size = 'md', color = '#333', style })
         return (
           <Path d="M4.5 16.5c-1.5 1.232-1.5 3.5-1.5 3.5s2.268 0 3.5-1.5c.478-.32 1.5 0 2.5 0s1.5-.5 1.5-.5-1.232-2.268-3.5-3.5c-.478-.32-2.5-1.5-2.5 1.5zm2.12-1.5L18 3.5c.5-.5.5-1 0-1.5s-1-.5-1.5 0L5 13.38c-.5.5-.38 1.12 0 1.5s1-.5 1.62-.88z" 
                 fill={color}/>
+        );
+
+      case 'more':
+        return (
+          <>
+            <Circle cx="12" cy="12" r="1" fill={color}/>
+            <Circle cx="19" cy="12" r="1" fill={color}/>
+            <Circle cx="5" cy="12" r="1" fill={color}/>
+          </>
         );
 
       case 'public':
