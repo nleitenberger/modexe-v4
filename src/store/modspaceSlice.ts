@@ -6,6 +6,8 @@ import {
   SharedJournalEntry,
   MediaItem,
   ThemeConfig,
+  AdvancedLayoutConfig,
+  EntryPosition,
   LAYOUT_TEMPLATES,
   DEFAULT_THEMES,
 } from '../types/modspace.types';
@@ -23,6 +25,10 @@ const initialState: ModSpaceState = {
   followedUsers: [],
   isLoading: false,
   error: null,
+  // Simplified advanced layout state
+  advancedLayoutConfig: null,
+  isAdvancedLayoutMode: false,
+  selectedEntries: [],
 };
 
 const modspaceSlice = createSlice({
@@ -292,6 +298,54 @@ const modspaceSlice = createSlice({
       }
     },
 
+    // Simplified Advanced Layout Management
+    updateAdvancedLayoutConfig: (state, action: PayloadAction<AdvancedLayoutConfig>) => {
+      state.advancedLayoutConfig = action.payload;
+      
+      // Update current ModSpace layout if in creative mode
+      if (state.currentModSpace && state.currentModSpace.layout.id === 'creative') {
+        state.currentModSpace.layout.config = action.payload;
+        state.currentModSpace.updatedAt = new Date();
+      }
+    },
+
+
+    setAdvancedLayoutMode: (state, action: PayloadAction<boolean>) => {
+      state.isAdvancedLayoutMode = action.payload;
+      
+      // Initialize simplified advanced config if entering advanced mode
+      if (action.payload && !state.advancedLayoutConfig && state.currentModSpace) {
+        const entryOrder = state.currentModSpace.sharedEntries.map(entry => entry.id);
+        
+        state.advancedLayoutConfig = {
+          ...state.currentModSpace.layout.config,
+          isAdvancedMode: true,
+          template: 'magazine', // Default template
+          entryOrder,
+          entryDisplayStyles: {},
+        };
+      }
+    },
+
+    setSelectedEntries: (state, action: PayloadAction<string[]>) => {
+      state.selectedEntries = action.payload;
+    },
+
+    addSelectedEntry: (state, action: PayloadAction<string>) => {
+      if (!state.selectedEntries.includes(action.payload)) {
+        state.selectedEntries.push(action.payload);
+      }
+    },
+
+    removeSelectedEntry: (state, action: PayloadAction<string>) => {
+      state.selectedEntries = state.selectedEntries.filter(id => id !== action.payload);
+    },
+
+    clearSelectedEntries: (state) => {
+      state.selectedEntries = [];
+    },
+
+
     // Reset State
     resetModSpace: (state) => {
       Object.assign(state, initialState);
@@ -324,6 +378,13 @@ export const {
   addSocialLink,
   removeSocialLink,
   updateSocialLink,
+  // Simplified Advanced Layout Actions
+  updateAdvancedLayoutConfig,
+  setAdvancedLayoutMode,
+  setSelectedEntries,
+  addSelectedEntry,
+  removeSelectedEntry,
+  clearSelectedEntries,
   resetModSpace,
 } = modspaceSlice.actions;
 

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Modal,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
@@ -12,14 +13,24 @@ import { updateModSpaceLayout } from '../../../store/modspaceSlice';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { LAYOUT_TEMPLATES } from '../../../types/modspace.types';
 import Icon, { IconName } from '../../common/Icon';
+import AdvancedLayoutEditor from './AdvancedLayoutEditor';
 
 const LayoutEditor: React.FC = () => {
   const { currentTheme } = useTheme();
   const dispatch = useDispatch();
   const { currentModSpace } = useSelector((state: RootState) => state.modspace);
+  const [showAdvancedMode, setShowAdvancedMode] = useState(false);
 
   const handleLayoutSelect = (layout: any) => {
     dispatch(updateModSpaceLayout(layout));
+  };
+
+  const handleAdvancedModeOpen = () => {
+    setShowAdvancedMode(true);
+  };
+
+  const handleAdvancedModeClose = () => {
+    setShowAdvancedMode(false);
   };
 
   const getLayoutIcon = (layoutId: string): IconName => {
@@ -60,8 +71,59 @@ const LayoutEditor: React.FC = () => {
         </Text>
       </View>
 
+      {/* Advanced Mode Button */}
+      <TouchableOpacity
+        style={[
+          styles.advancedModeButton,
+          {
+            backgroundColor: currentTheme.primaryColor,
+            borderRadius: currentTheme.effects.borderRadius,
+            shadowColor: currentTheme.primaryColor,
+            shadowOffset: {
+              width: 0,
+              height: 4,
+            },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 6,
+          }
+        ]}
+        onPress={handleAdvancedModeOpen}
+        activeOpacity={0.8}
+      >
+        <View style={styles.advancedModeContent}>
+          <View style={styles.advancedModeIcon}>
+            <Icon name="settings" size="lg" color={currentTheme.backgroundColor} />
+          </View>
+          <View style={styles.advancedModeText}>
+            <Text style={[
+              styles.advancedModeTitle,
+              {
+                color: currentTheme.backgroundColor,
+                fontSize: currentTheme.font.size.medium,
+                fontWeight: '700',
+              }
+            ]}>
+              Advanced Mode
+            </Text>
+            <Text style={[
+              styles.advancedModeSubtitle,
+              {
+                color: currentTheme.backgroundColor + 'CC',
+                fontSize: currentTheme.font.size.small,
+              }
+            ]}>
+              Maximum customization for Creative layouts
+            </Text>
+          </View>
+          <View style={styles.advancedModeArrow}>
+            <Icon name="edit" size="md" color={currentTheme.backgroundColor + 'AA'} />
+          </View>
+        </View>
+      </TouchableOpacity>
+
       <View style={styles.layoutGrid}>
-        {LAYOUT_TEMPLATES.map((layout) => {
+        {LAYOUT_TEMPLATES.filter(layout => layout.id !== 'creative').map((layout) => {
           const isSelected = currentModSpace?.layout.id === layout.id;
           
           return (
@@ -213,6 +275,13 @@ const LayoutEditor: React.FC = () => {
           );
         })}
       </View>
+      
+      {/* Advanced Layout Editor */}
+      <AdvancedLayoutEditor
+        visible={showAdvancedMode}
+        onClose={handleAdvancedModeClose}
+        entries={currentModSpace?.sharedEntries || []}
+      />
     </ScrollView>
   );
 };
@@ -234,6 +303,47 @@ const styles = StyleSheet.create({
   sectionDescription: {
     lineHeight: 20,
   },
+  
+  // Advanced Mode Button
+  advancedModeButton: {
+    padding: 20,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  advancedModeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  advancedModeIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  advancedModeText: {
+    flex: 1,
+  },
+  advancedModeTitle: {
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  advancedModeSubtitle: {
+    lineHeight: 18,
+  },
+  advancedModeArrow: {
+    opacity: 0.7,
+  },
+  
   layoutGrid: {
     gap: 16,
   },

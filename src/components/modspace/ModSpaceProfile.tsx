@@ -21,7 +21,60 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
 import { useTheme } from '../../contexts/ThemeContext';
+import { SharedContentItem } from '../../types/modspace.types';
 import Icon from '../common/Icon';
+
+// Utility function to combine journal entries and media items into unified content
+const combineSharedContent = (modspace: any): SharedContentItem[] => {
+  if (!modspace) return [];
+  
+  const unifiedContent: SharedContentItem[] = [];
+  
+  // Add journal entries
+  if (modspace.sharedEntries) {
+    modspace.sharedEntries.forEach((entry: any) => {
+      unifiedContent.push({
+        id: entry.id,
+        type: 'journal',
+        title: entry.title,
+        excerpt: entry.excerpt,
+        views: entry.views || 0,
+        likes: entry.likes || 0,
+        createdAt: entry.createdAt,
+        tags: entry.tags || [],
+        isPublic: entry.isPublic,
+        journalId: entry.journalId,
+        pageNumbers: entry.pageNumbers,
+      });
+    });
+  }
+  
+  // Add media items
+  if (modspace.mediaGallery) {
+    modspace.mediaGallery.forEach((media: any) => {
+      unifiedContent.push({
+        id: media.id,
+        type: 'media',
+        title: media.caption || 'Media Post',
+        excerpt: media.caption,
+        views: media.views || 0,
+        likes: media.likes || 0,
+        createdAt: media.uploadDate,
+        tags: media.tags || [],
+        isPublic: true, // Assume media is public for now
+        mediaType: media.type,
+        url: media.url,
+        thumbnail: media.thumbnail,
+        dimensions: media.dimensions,
+      });
+    });
+  }
+  
+  // Sort by creation date (newest first)
+  return unifiedContent.sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+};
 
 const ModSpaceProfile: React.FC = () => {
   const dispatch = useDispatch();
@@ -36,6 +89,9 @@ const ModSpaceProfile: React.FC = () => {
   
   // Create theme-aware styles
   const themedStyles = createThemedStyles(currentTheme);
+  
+  // Get combined content (journal entries + media items)
+  const sharedContent = combineSharedContent(currentModSpace);
 
   const handleNewEntryPress = () => {
     setShowNewEntryOptions(true);
@@ -170,16 +226,16 @@ const ModSpaceProfile: React.FC = () => {
         ]}>
           
 
-          {/* Shared Entries Section */}
+          {/* Unified Content Section */}
           <View style={themedStyles.sectionContainer}>
-            <Text style={themedStyles.sectionTitle}>Shared Journal Entries</Text>
-            {currentModSpace.sharedEntries.length === 0 ? (
+            <Text style={themedStyles.sectionTitle}>My Content</Text>
+            {sharedContent.length === 0 ? (
               <View style={themedStyles.emptySection}>
                 <Text style={themedStyles.emptySectionText}>
-                  No entries shared yet
+                  No content shared yet
                 </Text>
                 <Text style={themedStyles.emptySectionSubText}>
-                  Share your favorite journal pages to showcase your writing
+                  Share your journal entries and media to showcase your creativity
                 </Text>
               </View>
             ) : (
@@ -187,49 +243,72 @@ const ModSpaceProfile: React.FC = () => {
                 themedStyles.entriesGrid,
                 isPortrait ? themedStyles.entriesVertical : themedStyles.entriesHorizontal
               ]}>
-                {currentModSpace.sharedEntries.map((entry) => (
+                {sharedContent.map((item) => (
                   <TouchableOpacity 
-                    key={entry.id} 
+                    key={item.id} 
                     style={[
                       themedStyles.entryCard,
                       isPortrait ? themedStyles.entryCardVertical : themedStyles.entryCardHorizontal
                     ]}
                   >
-                    <Text style={themedStyles.entryTitle}>{entry.title}</Text>
-                    <Text style={themedStyles.entryExcerpt} numberOfLines={3}>
-                      {entry.excerpt}
-                    </Text>
+                    {/* Content Type Icon */}
+                    <View style={themedStyles.contentTypeIndicator}>
+                      <Icon 
+                        name={item.type === 'journal' ? 'edit' : 'media'} 
+                        size="xs" 
+                        color={item.type === 'journal' ? currentTheme.primaryColor : currentTheme.successColor || '#34C759'} 
+                        style={{ marginRight: 6 }} 
+                      />
+                      <Text style={themedStyles.contentTypeText}>
+                        {item.type === 'journal' ? 'Journal' : 'Media'}
+                      </Text>
+                    </View>
+
+                    {/* Media thumbnail for media items */}
+                    {item.type === 'media' && item.thumbnail && (
+                      <View style={themedStyles.mediaThumbnailContainer}>
+                        <Text style={themedStyles.mediaThumbnailPlaceholder}>
+                          {item.mediaType?.toUpperCase()} 📷
+                        </Text>
+                      </View>
+                    )}
+
+                    <Text style={themedStyles.entryTitle}>{item.title}</Text>
+                    {item.excerpt && (
+                      <Text style={themedStyles.entryExcerpt} numberOfLines={3}>
+                        {item.excerpt}
+                      </Text>
+                    )}
+
+                    {/* Tags */}
+                    {item.tags.length > 0 && (
+                      <View style={themedStyles.tagsContainer}>
+                        {item.tags.slice(0, 2).map((tag, index) => (
+                          <View key={index} style={themedStyles.tag}>
+                            <Text style={themedStyles.tagText}>#{tag}</Text>
+                          </View>
+                        ))}
+                        {item.tags.length > 2 && (
+                          <Text style={themedStyles.moreTagsText}>+{item.tags.length - 2}</Text>
+                        )}
+                      </View>
+                    )}
+
                     <View style={themedStyles.entryStats}>
                       <View style={themedStyles.entryStatContainer}>
                         <Icon name="heart" size="xs" color={currentTheme.errorColor || "#FF3B30"} style={{ marginRight: 4 }} />
-                        <Text style={themedStyles.entryStatText}>{entry.likes}</Text>
+                        <Text style={themedStyles.entryStatText}>{item.likes}</Text>
                       </View>
                       <View style={themedStyles.entryStatContainer}>
                         <Icon name="discover" size="xs" color={currentTheme.textColor} style={{ marginRight: 4, opacity: 0.6 }} />
-                        <Text style={themedStyles.entryStatText}>{entry.views}</Text>
+                        <Text style={themedStyles.entryStatText}>{item.views}</Text>
                       </View>
+                      <Text style={themedStyles.dateText}>
+                        {new Date(item.createdAt).toLocaleDateString()}
+                      </Text>
                     </View>
                   </TouchableOpacity>
                 ))}
-              </View>
-            )}
-          </View>
-
-          {/* Media Gallery Section */}
-          <View style={themedStyles.sectionContainer}>
-            <Text style={themedStyles.sectionTitle}>Media Gallery</Text>
-            {currentModSpace.mediaGallery.length === 0 ? (
-              <View style={themedStyles.emptySection}>
-                <Text style={themedStyles.emptySectionText}>
-                  No media uploaded yet
-                </Text>
-                <Text style={themedStyles.emptySectionSubText}>
-                  Add photos and videos to personalize your ModSpace
-                </Text>
-              </View>
-            ) : (
-              <View style={themedStyles.mediaGrid}>
-                {/* Media items will be rendered here */}
               </View>
             )}
           </View>
@@ -453,6 +532,63 @@ const createThemedStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     color: theme.textColor,
     opacity: 0.6,
+  },
+  // New styles for unified content
+  contentTypeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing?.xs || 8,
+  },
+  contentTypeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: theme.textColor,
+    opacity: 0.7,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  mediaThumbnailContainer: {
+    height: 80,
+    backgroundColor: theme.secondaryColor || theme.surfaceColor,
+    borderRadius: theme.borderRadius || 8,
+    marginBottom: theme.spacing?.sm || 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mediaThumbnailPlaceholder: {
+    fontSize: 14,
+    color: theme.textColor,
+    opacity: 0.6,
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginBottom: theme.spacing?.sm || 12,
+  },
+  tag: {
+    backgroundColor: theme.primaryColor + '20', // 20% opacity
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  tagText: {
+    fontSize: 10,
+    color: theme.primaryColor,
+    fontWeight: '500',
+  },
+  moreTagsText: {
+    fontSize: 10,
+    color: theme.textColor,
+    opacity: 0.6,
+    fontWeight: '500',
+    paddingHorizontal: 4,
+  },
+  dateText: {
+    fontSize: 10,
+    color: theme.textColor,
+    opacity: 0.5,
+    marginLeft: 'auto',
   },
   mediaGrid: {
     backgroundColor: theme.surfaceColor || theme.backgroundColor,

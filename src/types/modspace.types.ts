@@ -39,6 +39,20 @@ export interface LayoutConfig {
   customPositions?: EntryPosition[]; // For creative layout
 }
 
+// Simplified Advanced Layout Config - Template-based approach
+export interface AdvancedLayoutConfig extends LayoutConfig {
+  template?: LayoutTemplateType;
+  entryOrder?: string[];
+  entryDisplayStyles?: { [entryId: string]: EntryDisplayMode };
+  isAdvancedMode?: boolean;
+}
+
+// Simplified layout template types
+export type LayoutTemplateType = 'magazine' | 'grid' | 'timeline' | 'masonry' | 'hero';
+
+// Simplified entry display modes instead of complex styling
+export type EntryDisplayMode = 'compact' | 'card' | 'featured';
+
 export interface EntryPosition {
   entryId: string;
   x: number;
@@ -47,6 +61,17 @@ export interface EntryPosition {
   height: number;
   zIndex: number;
   rotation?: number;
+}
+
+// Note: Removed CanvasSettings, EntryStyle, and LayoutTemplate interfaces 
+// as they are replaced by the simplified template-based approach
+
+export interface TransformTool {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  action: string;
 }
 
 export interface SharedJournalEntry {
@@ -74,6 +99,33 @@ export interface MediaItem {
   tags: string[];
   uploadDate: Date;
   size?: number;
+  dimensions?: {
+    width: number;
+    height: number;
+  };
+  views?: number;
+  likes?: number;
+}
+
+// Unified content type that can represent both journal entries and media items
+export interface SharedContentItem {
+  id: string;
+  type: 'journal' | 'media';
+  // Common properties
+  title: string;
+  excerpt?: string;
+  views: number;
+  likes: number;
+  createdAt: Date;
+  tags: string[];
+  isPublic: boolean;
+  // Journal-specific properties (when type === 'journal')
+  journalId?: string;
+  pageNumbers?: number[];
+  // Media-specific properties (when type === 'media')
+  mediaType?: 'image' | 'video' | 'audio';
+  url?: string;
+  thumbnail?: string;
   dimensions?: {
     width: number;
     height: number;
@@ -230,6 +282,10 @@ export interface ModSpaceState {
   followedUsers: string[];
   isLoading: boolean;
   error: string | null;
+  // Simplified advanced layout state
+  advancedLayoutConfig: AdvancedLayoutConfig | null;
+  isAdvancedLayoutMode: boolean;
+  selectedEntries: string[];
 }
 
 // Layout Templates
