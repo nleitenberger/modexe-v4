@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Journal, JournalPage, JournalState, RichTextContent } from '../types/journal.types';
 import { StickerInstance } from '../types/sticker.types';
+import { generateJournalId, generatePageId } from '../utils/uniqueId';
 
 const initialState: JournalState = {
   currentJournal: null,
@@ -17,11 +18,11 @@ const journalSlice = createSlice({
   reducers: {
     createJournal: (state, action: PayloadAction<{ title: string }>) => {
       const newJournal: Journal = {
-        id: Date.now().toString(),
+        id: generateJournalId(),
         title: action.payload.title,
         pages: [
           {
-            id: `page-${Date.now()}-0`,
+            id: generatePageId(0),
             pageNumber: 0,
             content: {
               text: '',

@@ -1,5 +1,6 @@
 // ModSpace Types - Personal Profile & Content Hub System
 
+
 export interface ModSpace {
   id: string;
   userId: string;
@@ -62,6 +63,7 @@ export interface EntryPosition {
   zIndex: number;
   rotation?: number;
 }
+
 
 // Note: Removed CanvasSettings, EntryStyle, and LayoutTemplate interfaces 
 // as they are replaced by the simplified template-based approach

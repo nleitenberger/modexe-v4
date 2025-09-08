@@ -24,7 +24,10 @@ export const store = configureStore({
           'modspace/loadModSpace',
           'modspace/shareJournalEntry',
           'modspace/addMediaItem',
-          'modspace/setViewingModSpace'
+          'modspace/setViewingModSpace',
+          'modspace/initializeMobileLayoutConfig',
+          'modspace/addContentBlock',
+          'modspace/updateContentBlock'
         ],
         ignoredPaths: [
           'journal.currentJournal.createdAt', 
@@ -37,7 +40,10 @@ export const store = configureStore({
           'modspace.currentModSpace',
           'modspace.viewingModSpace',
           'modspace.sharedContent',
-          'modspace.discoverFeed'
+          'modspace.discoverFeed',
+          'modspace.mobileLayoutConfig',
+          'modspace.mobileLayoutConfig.contentBlocks',
+          'modspace.performanceMetrics'
         ],
         ignoredActionPaths: [
           'payload.createdAt', 
@@ -47,7 +53,9 @@ export const store = configureStore({
           'payload.shareDate',
           'payload.uploadDate',
           'payload.joinDate',
-          'payload.lastActive'
+          'payload.lastActive',
+          'payload.contentBlocks',
+          'payload.updates.updatedAt'
         ],
       },
     }),

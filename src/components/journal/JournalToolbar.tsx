@@ -13,6 +13,7 @@ import { RootState } from '../../store';
 import { togglePalette } from '../../store/stickerSlice';
 import { shareJournalEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
+import { generateSharedEntryId } from '../../utils/uniqueId';
 import Icon from '../common/Icon';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -54,7 +55,7 @@ const JournalToolbar: React.FC = () => {
     const excerpt = firstPageContent.slice(0, 150) + (firstPageContent.length > 150 ? '...' : '');
 
     const sharedEntry: SharedJournalEntry = {
-      id: `shared-${Date.now()}`,
+      id: generateSharedEntryId(),
       journalId: currentJournal.id,
       journalTitle: currentJournal.title,
       pages: allPageIndices,
