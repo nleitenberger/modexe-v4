@@ -16,6 +16,7 @@ import { createModSpace } from '../../store/modspaceSlice';
 import { createJournal } from '../../store/journalSlice';
 import { useOrientation } from '../../utils/useOrientation';
 import ProfileHeader from './widgets/ProfileHeader';
+import CustomizationPanel from './CustomizationPanel';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
@@ -29,6 +30,7 @@ const ModSpaceProfile: React.FC = () => {
   );
   const { isPortrait } = useOrientation();
   const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
+  const [showCustomizationPanel, setShowCustomizationPanel] = React.useState(false);
 
   const handleNewEntryPress = () => {
     setShowNewEntryOptions(true);
@@ -51,6 +53,19 @@ const ModSpaceProfile: React.FC = () => {
 
   const handleCancelNewEntry = () => {
     setShowNewEntryOptions(false);
+  };
+
+  const handleCustomizePress = () => {
+    setShowCustomizationPanel(true);
+  };
+
+  const handleCustomizationClose = () => {
+    setShowCustomizationPanel(false);
+  };
+
+  const handleCustomizationSave = () => {
+    // The CustomizationPanel handles saving internally
+    console.log('Customization saved successfully');
   };
 
 
@@ -132,7 +147,10 @@ const ModSpaceProfile: React.FC = () => {
               <Text style={styles.actionButtonText}>Share Entry</Text>
             </View>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
+          <TouchableOpacity 
+            style={styles.actionButton}
+            onPress={handleCustomizePress}
+          >
             <View style={styles.actionButtonContent}>
               <Icon name="customize" size="sm" color="#333" style={{ marginRight: 6 }} />
               <Text style={styles.actionButtonText}>Customize</Text>
@@ -259,6 +277,13 @@ const ModSpaceProfile: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Customization Panel */}
+      <CustomizationPanel
+        visible={showCustomizationPanel}
+        onClose={handleCustomizationClose}
+        onSave={handleCustomizationSave}
+      />
 
     </SafeAreaView>
   );
