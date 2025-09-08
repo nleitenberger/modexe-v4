@@ -75,6 +75,17 @@ const journalSlice = createSlice({
       state.error = null;
     },
 
+    updateJournalTitle: (
+      state,
+      action: PayloadAction<{ id: string; title: string }>
+    ) => {
+      if (state.currentJournal && state.currentJournal.id === action.payload.id) {
+        state.currentJournal.title = action.payload.title;
+        state.currentJournal.updatedAt = new Date();
+        state.isDirty = true;
+      }
+    },
+
     updatePageContent: (
       state,
       action: PayloadAction<{ pageId: string; content: RichTextContent }>
@@ -106,7 +117,7 @@ const journalSlice = createSlice({
     ) => {
       if (state.currentJournal) {
         for (const page of state.currentJournal.pages) {
-          const stickerIndex = page.stickers.findIndex((s) => s.id === action.payload.stickerId);
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload.stickerId);
           if (stickerIndex !== -1) {
             page.stickers[stickerIndex] = {
               ...page.stickers[stickerIndex],
@@ -123,7 +134,7 @@ const journalSlice = createSlice({
     removeSticker: (state, action: PayloadAction<string>) => {
       if (state.currentJournal) {
         for (const page of state.currentJournal.pages) {
-          const stickerIndex = page.stickers.findIndex((s) => s.id === action.payload);
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload);
           if (stickerIndex !== -1) {
             page.stickers.splice(stickerIndex, 1);
             state.currentJournal.updatedAt = new Date();
@@ -222,6 +233,7 @@ const journalSlice = createSlice({
 export const {
   createJournal,
   loadJournal,
+  updateJournalTitle,
   updatePageContent,
   addSticker,
   updateSticker,

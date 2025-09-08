@@ -133,3 +133,32 @@ Key methods:
 - Redux store ignores non-serializable paths for Date objects and sticker data
 - Navigation uses emoji icons (can be replaced with proper icon library)
 - Assets stored in `assets/images/` directory for sticker graphics
+
+## Recent Updates
+
+### UI/UX Improvements (Latest)
+
+**Icon System Standardization**:
+- Implemented semantic icon sizing system (xs=12px, sm=16px, md=20px, lg=24px, xl=32px)
+- Replaced hardcoded pixel values with consistent size tokens across all components
+- Fixed tab navigation focus effects to prevent jarring size changes
+- Updated all icon usage in MainNavigator, JournalToolbar, ModSpaceProfile, and StickerPalette
+
+**ModSpace Layout Enhancements**:
+- Integrated user stats (Entries, Views, Followers, Following) into ProfileHeader component
+- Moved quick action buttons (New Entry, Share, Customize) below profile stats for better flow
+- Removed duplicate large journal action buttons, streamlining the interface
+- Made quick action buttons span full width with even distribution using `flex: 1`
+- Added responsive layout for shared journal entries (vertical in portrait, 2-column grid in landscape)
+
+**Journal Creation Flow Simplification**:
+- Removed title entry modal during journal creation - now creates instantly with auto-generated title
+- Added editable title header directly in JournalEditor for inline editing
+- Implemented `updateJournalTitle` action in journal slice for real-time title updates
+- Streamlined posting flow with simple Public/Private button selection
+- Auto-generates post excerpts from current page content and navigates back to ModSpace after posting
+
+**Device Orientation Support**:
+- Fixed iPhone orientation detection by changing app.json from `"orientation": "portrait"` to `"orientation": "default"`
+- Enabled proper landscape mode functionality for responsive layouts across all device types
+- Journal entries now properly adapt layout when device orientation changes

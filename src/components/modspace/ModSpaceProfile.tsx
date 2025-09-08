@@ -28,8 +28,6 @@ const ModSpaceProfile: React.FC = () => {
     (state: RootState) => state.modspace
   );
   const { isPortrait } = useOrientation();
-  const [showCreateModal, setShowCreateModal] = React.useState(false);
-  const [journalTitle, setJournalTitle] = React.useState('');
   const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
 
   const handleNewEntryPress = () => {
@@ -38,8 +36,11 @@ const ModSpaceProfile: React.FC = () => {
 
   const handleCreateJournal = () => {
     setShowNewEntryOptions(false);
-    setShowCreateModal(true);
-    setJournalTitle(`Journal Entry - ${new Date().toLocaleDateString()}`);
+    // Create journal directly without modal
+    const defaultTitle = `Journal Entry - ${new Date().toLocaleDateString()}`;
+    dispatch(createJournal({ title: defaultTitle }));
+    // Navigate to Journal Editor
+    navigation.navigate('JournalEditor');
   };
 
   const handleCreateMedia = () => {
@@ -52,22 +53,6 @@ const ModSpaceProfile: React.FC = () => {
     setShowNewEntryOptions(false);
   };
 
-  const handleConfirmCreate = () => {
-    if (!journalTitle.trim()) {
-      Alert.alert('Error', 'Please enter a journal title');
-      return;
-    }
-    dispatch(createJournal({ title: journalTitle.trim() }));
-    setShowCreateModal(false);
-    setJournalTitle('');
-    // Navigate to Journal Editor
-    navigation.navigate('JournalEditor');
-  };
-
-  const handleCancelCreate = () => {
-    setShowCreateModal(false);
-    setJournalTitle('');
-  };
 
 
   useEffect(() => {
@@ -275,48 +260,6 @@ const ModSpaceProfile: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Create Journal Modal */}
-      <Modal
-        visible={showCreateModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCancelCreate}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Create New Journal Entry</Text>
-            <Text style={styles.modalSubtitle}>
-              Give your journal entry a meaningful title
-            </Text>
-            
-            <TextInput
-              style={styles.modalInput}
-              value={journalTitle}
-              onChangeText={setJournalTitle}
-              placeholder="Enter journal title..."
-              placeholderTextColor="#999"
-              autoFocus
-              selectTextOnFocus
-            />
-            
-            <View style={styles.modalButtons}>
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.modalCancelButton]}
-                onPress={handleCancelCreate}
-              >
-                <Text style={styles.modalCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modalButton, styles.modalCreateButton]}
-                onPress={handleConfirmCreate}
-              >
-                <Text style={styles.modalCreateText}>Create & Edit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -529,54 +472,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  modalInput: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 16,
-    fontSize: 16,
-    marginBottom: 20,
-    backgroundColor: '#f9f9f9',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  modalCancelButton: {
-    backgroundColor: '#f0f0f0',
-  },
-  modalCreateButton: {
-    backgroundColor: '#007AFF',
-  },
-  modalCancelText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#666',
-  },
-  modalCreateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
-  },
   entryOptionsContainer: {
     gap: 16,
     marginBottom: 20,
@@ -601,6 +496,33 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalCancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666',
   },
 });
 

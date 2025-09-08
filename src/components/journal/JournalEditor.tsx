@@ -1,15 +1,17 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   StyleSheet,
   Dimensions,
   SafeAreaView,
   Text,
+  TextInput,
+  TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootState } from '../../store';
-import { createJournal } from '../../store/journalSlice';
+import { createJournal, updateJournalTitle } from '../../store/journalSlice';
 import { loadStickerCategories } from '../../store/stickerSlice';
 import JournalSpread from './JournalSpread';
 import JournalToolbar from './JournalToolbar';
@@ -73,6 +75,21 @@ const JournalEditor: React.FC = () => {
   const dispatch = useDispatch();
   const { currentJournal, isLoading } = useSelector((state: RootState) => state.journal);
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [tempTitle, setTempTitle] = useState('');
+
+  // Title editing handlers
+  const handleTitleEdit = () => {
+    setTempTitle(currentJournal?.title || '');
+    setIsEditingTitle(true);
+  };
+
+  const handleTitleSave = () => {
+    if (tempTitle.trim() && currentJournal) {
+      dispatch(updateJournalTitle({ id: currentJournal.id, title: tempTitle.trim() }));
+    }
+    setIsEditingTitle(false);
+  };
 
   // Memoize the initialization to prevent infinite loops
   const shouldInitialize = useMemo(() => {
@@ -113,6 +130,29 @@ const JournalEditor: React.FC = () => {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaView style={styles.container}>
         <View style={styles.editorContainer}>
+          {/* Title Header */}
+          <View style={styles.titleContainer}>
+            {isEditingTitle ? (
+              <TextInput
+                style={styles.titleInput}
+                value={tempTitle}
+                onChangeText={setTempTitle}
+                onBlur={handleTitleSave}
+                onSubmitEditing={handleTitleSave}
+                autoFocus
+                selectTextOnFocus
+                placeholder="Enter journal title..."
+                placeholderTextColor="#999"
+              />
+            ) : (
+              <TouchableOpacity onPress={handleTitleEdit} style={styles.titleTouchable}>
+                <Text style={styles.titleText}>
+                  {currentJournal.title || 'Untitled Journal'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {/* Main journal spread area */}
           <View style={styles.journalContainer}>
             <JournalSpread journal={currentJournal} />
@@ -168,6 +208,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 8,
+  },
+  titleContainer: {
+    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  titleTouchable: {
+    paddingVertical: 8,
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  titleInput: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 12,
   },
 });
 

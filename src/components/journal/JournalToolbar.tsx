@@ -18,12 +18,16 @@ import { shareJournalEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { useOrientation } from '../../utils/useOrientation';
 import Icon from '../common/Icon';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/MainNavigator';
 
 const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
   const { currentJournal, currentSpreadIndex, currentPageIndex } = useSelector((state: RootState) => state.journal);
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
   const { isPortrait } = useOrientation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [showPostModal, setShowPostModal] = React.useState(false);
   const [postTitle, setPostTitle] = React.useState('');
   const [postExcerpt, setPostExcerpt] = React.useState('');
@@ -97,33 +101,34 @@ const JournalToolbar: React.FC = () => {
     setShowPostModal(true);
   };
 
-  const handlePostToModSpace = () => {
-    if (!currentJournal || !postTitle.trim()) {
-      Alert.alert('Error', 'Please enter a title for your post');
+  const handlePostPublic = () => {
+    handlePostToModSpace('public');
+  };
+
+  const handlePostPrivate = () => {
+    handlePostToModSpace('private');
+  };
+
+  const handlePostToModSpace = (visibility: 'public' | 'private') => {
+    if (!currentJournal) {
+      Alert.alert('Error', 'No journal to post');
       return;
     }
 
-    if (selectedPages.length === 0) {
-      Alert.alert('Error', 'Please select at least one page to share');
-      return;
-    }
-
-    // Create excerpt from selected pages if not provided
-    let finalExcerpt = postExcerpt.trim();
-    if (!finalExcerpt) {
-      const firstPageContent = currentJournal.pages[selectedPages[0]]?.content.text || '';
-      finalExcerpt = firstPageContent.slice(0, 150) + (firstPageContent.length > 150 ? '...' : '');
-    }
+    // Auto-generate post data
+    const currentPages = isPortrait ? [currentPageIndex] : [currentSpreadIndex * 2, currentSpreadIndex * 2 + 1];
+    const firstPageContent = currentJournal.pages[currentPages[0]]?.content.text || '';
+    const excerpt = firstPageContent.slice(0, 150) + (firstPageContent.length > 150 ? '...' : '');
 
     const sharedEntry: SharedJournalEntry = {
       id: `shared-${Date.now()}`,
       journalId: currentJournal.id,
       journalTitle: currentJournal.title,
-      pages: selectedPages,
-      title: postTitle.trim(),
-      excerpt: finalExcerpt,
+      pages: currentPages.filter(pageIndex => pageIndex < currentJournal.pages.length),
+      title: currentJournal.title,
+      excerpt: excerpt || 'A new journal entry',
       shareDate: new Date(),
-      visibility: postVisibility,
+      visibility,
       likes: 0,
       views: 0,
       comments: [],
@@ -132,14 +137,13 @@ const JournalToolbar: React.FC = () => {
 
     dispatch(shareJournalEntry(sharedEntry));
     
-    // Reset modal state
+    // Close modal and navigate back to ModSpace
     setShowPostModal(false);
-    setPostTitle('');
-    setPostExcerpt('');
-    setSelectedPages([]);
-    setPostVisibility('public');
+    navigation.navigate('MainTabs');
     
-    Alert.alert('Success', 'Your journal entry has been posted to your ModSpace!');
+    // Show success message
+    const visibilityText = visibility === 'public' ? 'publicly' : 'privately';
+    Alert.alert('Success', `Your journal entry has been posted ${visibilityText} to your ModSpace!`);
   };
 
   const handleCancelPost = () => {
@@ -218,120 +222,40 @@ const JournalToolbar: React.FC = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Post to ModSpace</Text>
+            <Text style={styles.modalSubtitle}>
+              Choose how you'd like to share your journal entry
+            </Text>
             
-            <ScrollView style={styles.modalScrollView}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Title</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={postTitle}
-                  onChangeText={setPostTitle}
-                  placeholder="Enter post title..."
-                  placeholderTextColor="#999"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Excerpt (optional)</Text>
-                <TextInput
-                  style={[styles.textInput, styles.multilineInput]}
-                  value={postExcerpt}
-                  onChangeText={setPostExcerpt}
-                  placeholder="Brief description of your entry..."
-                  placeholderTextColor="#999"
-                  multiline
-                  numberOfLines={3}
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Select Pages to Share</Text>
-                <View style={styles.pageSelector}>
-                  {currentJournal?.pages.map((page, index) => (
-                    <TouchableOpacity
-                      key={page.id}
-                      style={[
-                        styles.pageOption,
-                        selectedPages.includes(index) && styles.selectedPageOption,
-                      ]}
-                      onPress={() => togglePageSelection(index)}
-                    >
-                      <Text style={[
-                        styles.pageOptionText,
-                        selectedPages.includes(index) && styles.selectedPageOptionText,
-                      ]}>
-                        Page {index + 1}
-                      </Text>
-                    </TouchableOpacity>
-                  )) || []}
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Visibility</Text>
-                <View style={styles.visibilitySelector}>
-                  <TouchableOpacity
-                    style={[
-                      styles.visibilityOption,
-                      postVisibility === 'public' && styles.selectedVisibilityOption,
-                    ]}
-                    onPress={() => setPostVisibility('public')}
-                  >
-                    <View style={styles.visibilityOptionContent}>
-                      <Icon 
-                        name="public" 
-                        size="sm" 
-                        color={postVisibility === 'public' ? "white" : "#666"} 
-                        style={{ marginRight: 6 }} 
-                      />
-                      <Text style={[
-                        styles.visibilityOptionText,
-                        postVisibility === 'public' && styles.selectedVisibilityOptionText,
-                      ]}>
-                        Public
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.visibilityOption,
-                      postVisibility === 'private' && styles.selectedVisibilityOption,
-                    ]}
-                    onPress={() => setPostVisibility('private')}
-                  >
-                    <View style={styles.visibilityOptionContent}>
-                      <Icon 
-                        name="private" 
-                        size="sm" 
-                        color={postVisibility === 'private' ? "white" : "#666"} 
-                        style={{ marginRight: 6 }} 
-                      />
-                      <Text style={[
-                        styles.visibilityOptionText,
-                        postVisibility === 'private' && styles.selectedVisibilityOptionText,
-                      ]}>
-                        Private
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalCancelButton]}
-                onPress={handleCancelPost}
+            <View style={styles.visibilityButtonsContainer}>
+              <TouchableOpacity 
+                style={[styles.visibilityButton, styles.publicButton]}
+                onPress={handlePostPublic}
               >
-                <Text style={styles.modalCancelText}>Cancel</Text>
+                <Icon name="public" size="xl" color="white" />
+                <Text style={styles.visibilityButtonTitle}>Post Public</Text>
+                <Text style={styles.visibilityButtonDescription}>
+                  Everyone can see this entry
+                </Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.modalPostButton]}
-                onPress={handlePostToModSpace}
+              
+              <TouchableOpacity 
+                style={[styles.visibilityButton, styles.privateButton]}
+                onPress={handlePostPrivate}
               >
-                <Text style={styles.modalPostText}>Post to ModSpace</Text>
+                <Icon name="private" size="xl" color="white" />
+                <Text style={styles.visibilityButtonTitle}>Post Private</Text>
+                <Text style={styles.visibilityButtonDescription}>
+                  Only you can see this entry
+                </Text>
               </TouchableOpacity>
             </View>
+            
+            <TouchableOpacity 
+              style={[styles.modalButton, styles.modalCancelButton]}
+              onPress={handleCancelPost}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -433,6 +357,39 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  visibilityButtonsContainer: {
+    gap: 16,
+    marginBottom: 20,
+  },
+  visibilityButton: {
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
+  },
+  publicButton: {
+    backgroundColor: '#007AFF',
+  },
+  privateButton: {
+    backgroundColor: '#34C759',
+  },
+  visibilityButtonTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  visibilityButtonDescription: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
   },
   modalScrollView: {
