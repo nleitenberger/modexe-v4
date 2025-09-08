@@ -1,41 +1,110 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   View,
   StyleSheet,
   Dimensions,
   SafeAreaView,
+  Text,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootState } from '../../store';
 import { createJournal } from '../../store/journalSlice';
 import { loadStickerCategories } from '../../store/stickerSlice';
-import { STICKER_CATEGORIES } from '../../constants/stickers';
 import JournalSpread from './JournalSpread';
 import JournalToolbar from './JournalToolbar';
 import StickerPalette from './StickerPalette';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+// Simple sticker categories to avoid circular reference issues
+const SIMPLE_STICKER_CATEGORIES = [
+  {
+    id: 'emotions',
+    name: 'Emotions',
+    icon: '😊',
+    color: '#FFE4E1',
+    stickers: [
+      {
+        id: 'happy-1',
+        name: 'Happy',
+        emoji: '😊',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['happy', 'smile', 'joy'],
+      },
+      {
+        id: 'love-1',
+        name: 'Love',
+        emoji: '❤️',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['love', 'heart', 'romance'],
+      },
+    ],
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    icon: '🌿',
+    color: '#E8F5E8',
+    stickers: [
+      {
+        id: 'tree-1',
+        name: 'Tree',
+        emoji: '🌳',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['tree', 'nature', 'green'],
+      },
+      {
+        id: 'flower-1',
+        name: 'Flower',
+        emoji: '🌸',
+        category: null,
+        size: { width: 32, height: 32 },
+        tags: ['flower', 'bloom', 'pink'],
+      },
+    ],
+  },
+];
+
 const JournalEditor: React.FC = () => {
   const dispatch = useDispatch();
   const { currentJournal, isLoading } = useSelector((state: RootState) => state.journal);
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
 
-  useEffect(() => {
-    // Initialize sticker categories
-    dispatch(loadStickerCategories(STICKER_CATEGORIES));
+  // Memoize the initialization to prevent infinite loops
+  const shouldInitialize = useMemo(() => {
+    return !currentJournal && !isLoading;
+  }, [currentJournal, isLoading]);
 
-    // Create a new journal if none exists
-    if (!currentJournal) {
+  useEffect(() => {
+    if (shouldInitialize) {
+      // Initialize sticker categories with simple data
+      dispatch(loadStickerCategories(SIMPLE_STICKER_CATEGORIES));
+
+      // Create a new journal
       dispatch(createJournal({ title: 'My Journal' }));
     }
-  }, [dispatch, currentJournal]);
+  }, [dispatch, shouldInitialize]);
 
-  if (isLoading || !currentJournal) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer} />
+        <View style={styles.loadingContainer}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!currentJournal) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text>Initializing...</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -75,8 +144,8 @@ const styles = StyleSheet.create({
   },
   journalContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 12,
   },
   loadingContainer: {
     flex: 1,

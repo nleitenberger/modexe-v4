@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
-  TextInput,
   Text,
+  TextInput,
   TouchableOpacity,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
@@ -26,6 +26,17 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [localText, setLocalText] = useState(page.content.text);
 
+  // Keep local text in sync with page content
+  useEffect(() => {
+    setLocalText(page.content.text);
+  }, [page.content.text]);
+
+  const handlePagePress = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+    }
+  };
+
   const handleTextChange = (text: string) => {
     setLocalText(text);
   };
@@ -41,10 +52,8 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
     setIsEditing(false);
   };
 
-  const handlePagePress = () => {
-    if (!isEditing) {
-      setIsEditing(true);
-    }
+  const handleTextBlur = () => {
+    handleTextSubmit();
   };
 
   return (
@@ -73,17 +82,20 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
             ]}
             value={localText}
             onChangeText={handleTextChange}
-            onBlur={handleTextSubmit}
+            onBlur={handleTextBlur}
+            onSubmitEditing={handleTextSubmit}
             multiline
             autoFocus
-            placeholder="Start writing..."
+            placeholder="Start writing your story..."
             placeholderTextColor="#999"
+            scrollEnabled={true}
+            textAlignVertical="top"
           />
         ) : (
           <TouchableOpacity
             style={styles.textDisplay}
             onPress={handlePagePress}
-            activeOpacity={1}
+            activeOpacity={0.7}
           >
             {localText ? (
               <Text
@@ -147,13 +159,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     textAlignVertical: 'top',
-    paddingTop: 0,
-    paddingBottom: 0,
-    margin: 0,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 122, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 122, 255, 0.2)',
+    minHeight: 120,
   },
   textDisplay: {
     flex: 1,
-    paddingVertical: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    minHeight: 120,
   },
   displayText: {
     fontFamily: 'System',

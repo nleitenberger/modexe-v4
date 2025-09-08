@@ -5,6 +5,7 @@ import { StickerInstance } from '../types/sticker.types';
 const initialState: JournalState = {
   currentJournal: null,
   currentSpreadIndex: 0,
+  currentPageIndex: 0,
   isDirty: false,
   isLoading: false,
   error: null,
@@ -61,12 +62,14 @@ const journalSlice = createSlice({
       };
       state.currentJournal = newJournal;
       state.currentSpreadIndex = 0;
+      state.currentPageIndex = 0;
       state.isDirty = true;
     },
 
     loadJournal: (state, action: PayloadAction<Journal>) => {
       state.currentJournal = action.payload;
       state.currentSpreadIndex = 0;
+      state.currentPageIndex = 0;
       state.isDirty = false;
       state.isLoading = false;
       state.error = null;
@@ -103,7 +106,7 @@ const journalSlice = createSlice({
     ) => {
       if (state.currentJournal) {
         for (const page of state.currentJournal.pages) {
-          const stickerIndex = page.stickers.findIndex(s => s.id === action.payload.stickerId);
+          const stickerIndex = page.stickers.findIndex((s) => s.id === action.payload.stickerId);
           if (stickerIndex !== -1) {
             page.stickers[stickerIndex] = {
               ...page.stickers[stickerIndex],
@@ -120,7 +123,7 @@ const journalSlice = createSlice({
     removeSticker: (state, action: PayloadAction<string>) => {
       if (state.currentJournal) {
         for (const page of state.currentJournal.pages) {
-          const stickerIndex = page.stickers.findIndex(s => s.id === action.payload);
+          const stickerIndex = page.stickers.findIndex((s) => s.id === action.payload);
           if (stickerIndex !== -1) {
             page.stickers.splice(stickerIndex, 1);
             state.currentJournal.updatedAt = new Date();
@@ -133,17 +136,46 @@ const journalSlice = createSlice({
 
     setCurrentSpread: (state, action: PayloadAction<number>) => {
       state.currentSpreadIndex = Math.max(0, action.payload);
+      // Sync page index with spread index
+      state.currentPageIndex = state.currentSpreadIndex * 2;
+    },
+
+    setCurrentPage: (state, action: PayloadAction<number>) => {
+      if (state.currentJournal) {
+        state.currentPageIndex = Math.max(0, Math.min(action.payload, state.currentJournal.pages.length - 1));
+        // Sync spread index with page index
+        state.currentSpreadIndex = Math.floor(state.currentPageIndex / 2);
+      }
     },
 
     nextSpread: (state) => {
       if (state.currentJournal) {
         const maxSpread = Math.floor((state.currentJournal.pages.length - 1) / 2);
         state.currentSpreadIndex = Math.min(state.currentSpreadIndex + 1, maxSpread);
+        // Sync page index
+        state.currentPageIndex = state.currentSpreadIndex * 2;
+      }
+    },
+
+    nextPage: (state) => {
+      if (state.currentJournal) {
+        const maxPage = state.currentJournal.pages.length - 1;
+        state.currentPageIndex = Math.min(state.currentPageIndex + 1, maxPage);
+        // Sync spread index
+        state.currentSpreadIndex = Math.floor(state.currentPageIndex / 2);
       }
     },
 
     prevSpread: (state) => {
       state.currentSpreadIndex = Math.max(0, state.currentSpreadIndex - 1);
+      // Sync page index
+      state.currentPageIndex = state.currentSpreadIndex * 2;
+    },
+
+    prevPage: (state) => {
+      state.currentPageIndex = Math.max(0, state.currentPageIndex - 1);
+      // Sync spread index
+      state.currentSpreadIndex = Math.floor(state.currentPageIndex / 2);
     },
 
     addPage: (state) => {
@@ -195,8 +227,11 @@ export const {
   updateSticker,
   removeSticker,
   setCurrentSpread,
+  setCurrentPage,
   nextSpread,
+  nextPage,
   prevSpread,
+  prevPage,
   addPage,
   setLoading,
   setError,

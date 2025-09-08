@@ -187,9 +187,15 @@ export const STICKER_CATEGORIES: StickerCategory[] = [
   },
 ];
 
-// Set circular references after creation
+// Initialize category references to avoid circular dependency issues
 STICKER_CATEGORIES.forEach(category => {
   category.stickers.forEach(sticker => {
-    sticker.category = category;
+    sticker.category = { 
+      id: category.id, 
+      name: category.name, 
+      icon: category.icon, 
+      color: category.color, 
+      stickers: [] // Avoid circular reference
+    };
   });
 });

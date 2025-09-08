@@ -49,6 +49,7 @@ export interface JournalSpread {
 export interface JournalState {
   currentJournal: Journal | null;
   currentSpreadIndex: number;
+  currentPageIndex: number;
   isDirty: boolean;
   isLoading: boolean;
   error: string | null;

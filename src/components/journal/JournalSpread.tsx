@@ -2,46 +2,89 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  Dimensions,
   ScrollView,
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Journal, JournalPage } from '../../types/journal.types';
+import { useOrientation } from '../../utils/useOrientation';
 import JournalPageComponent from './JournalPage';
 
 interface JournalSpreadProps {
   journal: Journal;
 }
 
-const { width: screenWidth } = Dimensions.get('window');
-const SPREAD_PADDING = 32;
-const PAGE_GAP = 16;
-
 const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
-  const currentSpreadIndex = useSelector((state: RootState) => state.journal.currentSpreadIndex);
+  const { currentSpreadIndex, currentPageIndex } = useSelector((state: RootState) => state.journal);
+  const { width: screenWidth, isPortrait, isLandscape } = useOrientation();
 
-  const getSpreadPages = (spreadIndex: number): { left: JournalPage | null; right: JournalPage | null } => {
-    const leftPageIndex = spreadIndex * 2;
-    const rightPageIndex = leftPageIndex + 1;
+  // Responsive layout constants
+  const MOBILE_PADDING = 16;
+  const DESKTOP_PADDING = 32;
+  const PAGE_GAP = 12;
+  const MAX_JOURNAL_WIDTH = 800; // Maximum width for journal
+  
+  const padding = isPortrait ? MOBILE_PADDING : DESKTOP_PADDING;
+  const availableWidth = Math.min(screenWidth - (padding * 2), MAX_JOURNAL_WIDTH);
 
-    return {
-      left: journal.pages[leftPageIndex] || null,
-      right: journal.pages[rightPageIndex] || null,
-    };
+  const getSpreadPages = (): { left: JournalPage | null; right: JournalPage | null; current: JournalPage | null } => {
+    if (isPortrait) {
+      // Portrait mode: show single page based on currentPageIndex
+      return {
+        left: null,
+        right: null,
+        current: journal.pages[currentPageIndex] || null,
+      };
+    } else {
+      // Landscape mode: show spread based on currentSpreadIndex
+      const leftPageIndex = currentSpreadIndex * 2;
+      const rightPageIndex = leftPageIndex + 1;
+      
+      return {
+        left: journal.pages[leftPageIndex] || null,
+        right: journal.pages[rightPageIndex] || null,
+        current: null,
+      };
+    }
   };
 
-  const { left: leftPage, right: rightPage } = getSpreadPages(currentSpreadIndex);
-  const pageWidth = (screenWidth - SPREAD_PADDING - PAGE_GAP) / 2;
+  const { left: leftPage, right: rightPage, current: currentPage } = getSpreadPages();
+  
+  // Calculate page dimensions based on orientation
+  const pageWidth = isPortrait 
+    ? availableWidth - 24 // Single page with some margin
+    : (availableWidth - PAGE_GAP) / 2; // Two pages side by side
 
+  if (isPortrait) {
+    // Single page layout for portrait mode
+    return (
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: padding }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.singlePageSpread, { width: availableWidth }]}>
+          {currentPage && (
+            <JournalPageComponent
+              page={currentPage}
+              width={pageWidth}
+              isLeftPage={currentPageIndex % 2 === 0}
+            />
+          )}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Dual page layout for landscape mode
   return (
     <ScrollView
       style={styles.scrollContainer}
-      contentContainerStyle={styles.spreadContainer}
+      contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: padding }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={styles.spread}>
-        {/* Book binding shadow effect */}
+      <View style={[styles.spread, { width: availableWidth }]}>
+        {/* Book binding shadow effect - only in landscape */}
         <View style={styles.binding} />
         
         {/* Left page */}
@@ -77,25 +120,42 @@ const styles = StyleSheet.create({
   spreadContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: SPREAD_PADDING / 2,
-    paddingVertical: 20,
+    paddingVertical: 16,
   },
+  // Single page layout for portrait
+  singlePageSpread: {
+    alignSelf: 'center',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+    minHeight: 500,
+    maxWidth: 400,
+  },
+  // Dual page layout for landscape
   spread: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     justifyContent: 'center',
+    alignSelf: 'center',
     position: 'relative',
     backgroundColor: 'white',
-    borderRadius: 8,
+    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
-    minHeight: 600,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 5,
+    minHeight: 500,
   },
   binding: {
     position: 'absolute',
@@ -103,13 +163,14 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 2,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: 'rgba(0, 0, 0, 0.15)',
     transform: [{ translateX: -1 }],
     zIndex: 10,
+    borderRadius: 1,
   },
   pageContainer: {
     flex: 1,
-    minHeight: 600,
+    minHeight: 500,
     backgroundColor: 'white',
   },
 });
