@@ -1,0 +1,195 @@
+import { StickerCategory, Sticker } from '../types/sticker.types';
+
+export const STICKER_CATEGORIES: StickerCategory[] = [
+  {
+    id: 'emotions',
+    name: 'Emotions',
+    icon: '😊',
+    color: '#FFE4E1',
+    stickers: [
+      {
+        id: 'happy-1',
+        name: 'Happy',
+        emoji: '😊',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['happy', 'smile', 'joy'],
+      },
+      {
+        id: 'love-1',
+        name: 'Love',
+        emoji: '❤️',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['love', 'heart', 'romance'],
+      },
+      {
+        id: 'excited-1',
+        name: 'Excited',
+        emoji: '🤩',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['excited', 'star-eyes', 'wow'],
+      },
+      {
+        id: 'laugh-1',
+        name: 'Laughing',
+        emoji: '😂',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['laugh', 'funny', 'tears'],
+      },
+      {
+        id: 'thinking-1',
+        name: 'Thinking',
+        emoji: '🤔',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['thinking', 'wondering', 'hmm'],
+      },
+    ],
+  },
+  {
+    id: 'nature',
+    name: 'Nature',
+    icon: '🌿',
+    color: '#E8F5E8',
+    stickers: [
+      {
+        id: 'tree-1',
+        name: 'Tree',
+        emoji: '🌳',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['tree', 'nature', 'green'],
+      },
+      {
+        id: 'flower-1',
+        name: 'Flower',
+        emoji: '🌸',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['flower', 'bloom', 'pink'],
+      },
+      {
+        id: 'sun-1',
+        name: 'Sun',
+        emoji: '☀️',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['sun', 'sunny', 'bright'],
+      },
+      {
+        id: 'moon-1',
+        name: 'Moon',
+        emoji: '🌙',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['moon', 'night', 'crescent'],
+      },
+      {
+        id: 'star-1',
+        name: 'Star',
+        emoji: '⭐',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['star', 'shine', 'sparkle'],
+      },
+    ],
+  },
+  {
+    id: 'symbols',
+    name: 'Symbols',
+    icon: '⚡',
+    color: '#FFF8DC',
+    stickers: [
+      {
+        id: 'arrow-1',
+        name: 'Arrow Right',
+        emoji: '➡️',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['arrow', 'direction', 'right'],
+      },
+      {
+        id: 'check-1',
+        name: 'Check Mark',
+        emoji: '✅',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['check', 'done', 'complete'],
+      },
+      {
+        id: 'warning-1',
+        name: 'Warning',
+        emoji: '⚠️',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['warning', 'caution', 'alert'],
+      },
+      {
+        id: 'lightning-1',
+        name: 'Lightning',
+        emoji: '⚡',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['lightning', 'energy', 'power'],
+      },
+      {
+        id: 'fire-1',
+        name: 'Fire',
+        emoji: '🔥',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['fire', 'hot', 'flame'],
+      },
+    ],
+  },
+  {
+    id: 'shapes',
+    name: 'Shapes',
+    icon: '🔵',
+    color: '#E6F3FF',
+    stickers: [
+      {
+        id: 'circle-1',
+        name: 'Blue Circle',
+        emoji: '🔵',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['circle', 'blue', 'round'],
+      },
+      {
+        id: 'square-1',
+        name: 'Orange Square',
+        emoji: '🟠',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['square', 'orange', 'shape'],
+      },
+      {
+        id: 'diamond-1',
+        name: 'Diamond',
+        emoji: '🔶',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['diamond', 'orange', 'gem'],
+      },
+      {
+        id: 'heart-shape-1',
+        name: 'Heart Shape',
+        emoji: '🟣',
+        category: null as any,
+        size: { width: 32, height: 32 },
+        tags: ['heart', 'purple', 'love'],
+      },
+    ],
+  },
+];
+
+// Set circular references after creation
+STICKER_CATEGORIES.forEach(category => {
+  category.stickers.forEach(sticker => {
+    sticker.category = category;
+  });
+});
