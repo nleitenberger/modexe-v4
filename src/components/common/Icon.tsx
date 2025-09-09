@@ -13,6 +13,8 @@ export type IconName =
   | 'instagram' | 'twitter' | 'tiktok' | 'youtube' | 'website' | 'link'
   // Actions
   | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket' | 'more' | 'plus'
+  // Asset Library Icons
+  | 'search' | 'clock' | 'layers' | 'trash' | 'check'
   // Stickers/Emotions
   | 'smile' | 'tree' | 'flower' | 'sun' | 'moon' | 'star' | 'lightning' | 'arrow-right' | 'warning' | 'fire';
 
@@ -339,6 +341,41 @@ const Icon: React.FC<IconProps> = ({ name, size = 'md', color = '#333', style })
         return (
           <Path d="M12 1C8.31 1 5.07 3.55 5.07 7.89V10H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V12c0-1.1-.9-2-2-2h-1.07V7.89C18.93 3.55 15.69 1 12 1zm6 21H6V12h12v10zm-8-14.89C10 5.13 10.9 3 12 3s2 2.13 2 4.89V10h-4V7.89z" 
                 fill={color}/>
+        );
+
+      // Asset Library Icons
+      case 'search':
+        return (
+          <>
+            <Circle cx="11" cy="11" r="8" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="m21 21-4.35-4.35" fill="none" stroke={color} strokeWidth="2"/>
+          </>
+        );
+
+      case 'clock':
+        return (
+          <>
+            <Circle cx="12" cy="12" r="10" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="M12 6v6l4 2" fill="none" stroke={color} strokeWidth="2"/>
+          </>
+        );
+
+      case 'layers':
+        return (
+          <>
+            <Path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.91a1 1 0 0 0 0-1.83Z" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" fill="none" stroke={color} strokeWidth="2"/>
+          </>
+        );
+
+      case 'trash':
+        return (
+          <>
+            <Path d="M3 6h18" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" fill="none" stroke={color} strokeWidth="2"/>
+            <Path d="M8 6V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2" fill="none" stroke={color} strokeWidth="2"/>
+          </>
         );
       
       default:

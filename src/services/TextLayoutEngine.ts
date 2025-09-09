@@ -99,10 +99,12 @@ export class TextLayoutEngine {
       height: lineHeight,
     };
 
-    return obstacles.filter(obstacle => {
+    const intersectingObstacles = obstacles.filter(obstacle => {
       const expandedObstacle = expandRectangle(obstacle.bounds, obstacle.margin);
       return rectanglesOverlap(lineRect, expandedObstacle);
     });
+
+    return intersectingObstacles;
   }
 
   /**
@@ -203,8 +205,6 @@ export class TextLayoutEngine {
     segments: LineSegment[]
   ): TextLine {
     const textSegments: TextSegment[] = [];
-    let currentX = segments[0]?.startX || 0;
-    let segmentIndex = 0;
     let wordIndex = 0;
 
     for (const segment of segments) {
@@ -300,26 +300,38 @@ export class TextLayoutEngine {
   /**
    * Convert stickers to obstacles
    */
-  static stickersToObstacles(stickers: StickerInstance[], pageId: string): Obstacle[] {
+  static stickersToObstacles(stickers: StickerInstance[], pageId: string, containerBounds?: { x: number; y: number }): Obstacle[] {
+    const offsetX = containerBounds?.x || 0;
+    const offsetY = containerBounds?.y || 0;
+    
     return stickers
       .filter(sticker => sticker.pageId === pageId)
-      .map(sticker => ({
-        id: sticker.id,
-        bounds: {
-          x: sticker.position.x,
-          y: sticker.position.y,
-          width: 40 * sticker.scale, // Base sticker size
-          height: 40 * sticker.scale,
-        },
-        type: 'sticker' as const,
-        margin: 8, // Text margin around stickers
-      }));
+      .map(sticker => {
+        // Account for sticker scaling and rotation
+        const baseSize = 40; // Base sticker size from DraggableSticker
+        const actualWidth = baseSize * sticker.scale;
+        const actualHeight = baseSize * sticker.scale;
+        
+        return {
+          id: sticker.id,
+          bounds: {
+            x: sticker.position.x - offsetX,
+            y: sticker.position.y - offsetY,
+            width: actualWidth,
+            height: actualHeight,
+          },
+          type: 'sticker' as const,
+          margin: 12, // Increased margin for better text spacing
+        };
+      });
   }
 
   /**
    * Estimate space width
    */
   private getSpaceWidth(): number {
-    return textMeasurer.measureWords([' '], this.textStyle)[0].width;
+    // More accurate space width calculation based on font size
+    return this.textStyle.fontSize * 0.25; // Typical space character width
   }
+
 }

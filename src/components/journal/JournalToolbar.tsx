@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { togglePalette } from '../../store/stickerSlice';
+import { togglePalette, toggleAssetDrawer } from '../../store/stickerSlice';
 import { shareJournalEntry, updateSharedEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { generateSharedEntryId } from '../../utils/uniqueId';
@@ -24,13 +24,17 @@ import PageSizeSelector from './PageSizeSelector';
 const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
   const { currentJournal, originalSharedEntryId } = useSelector((state: RootState) => state.journal);
-  const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
+  const { isPaletteExpanded, isAssetDrawerOpen } = useSelector((state: RootState) => state.sticker);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [showPostModal, setShowPostModal] = React.useState(false);
   const [showPageSizeSelector, setShowPageSizeSelector] = React.useState(false);
 
   const handleToggleStickers = () => {
     dispatch(togglePalette());
+  };
+
+  const handleToggleAssetDrawer = () => {
+    dispatch(toggleAssetDrawer());
   };
 
   const handleOpenPageSizeSelector = () => {
@@ -125,15 +129,31 @@ const JournalToolbar: React.FC = () => {
   return (
     <SafeAreaView style={styles.toolbarContainer}>
       <View style={styles.toolbar}>
-        {/* Left side - Customize button */}
-        <TouchableOpacity
-          style={[styles.customizeButton, isPaletteExpanded && styles.activeButton]}
-          onPress={handleToggleStickers}
-        >
-          <Text style={[styles.customizeButtonText, isPaletteExpanded && styles.activeButtonText]}>
-            Customize
-          </Text>
-        </TouchableOpacity>
+        {/* Left side - Customize and Asset Drawer buttons */}
+        <View style={styles.leftButtons}>
+          <TouchableOpacity
+            style={[styles.customizeButton, isPaletteExpanded && styles.activeButton]}
+            onPress={handleToggleStickers}
+          >
+            <Text style={[styles.customizeButtonText, isPaletteExpanded && styles.activeButtonText]}>
+              Customize
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.assetButton, isAssetDrawerOpen && styles.activeButton]}
+            onPress={handleToggleAssetDrawer}
+          >
+            <Icon 
+              name="layers" 
+              size="sm" 
+              color={isAssetDrawerOpen ? "#007AFF" : "#666"} 
+            />
+            <Text style={[styles.assetButtonText, isAssetDrawerOpen && styles.activeButtonText]}>
+              Assets
+            </Text>
+          </TouchableOpacity>
+        </View>
         
         {/* Center - Page size button */}
         <TouchableOpacity
@@ -237,6 +257,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
+  leftButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   customizeButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -247,6 +272,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#007AFF',
+  },
+  assetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    gap: 4,
+  },
+  assetButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
   },
   pageSizeButton: {
     paddingHorizontal: 12,

@@ -171,6 +171,84 @@ const journalSlice = createSlice({
       }
     },
 
+    sendStickerToFront: (state, action: PayloadAction<string>) => {
+      if (state.currentJournal) {
+        for (const page of state.currentJournal.pages) {
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload);
+          if (stickerIndex !== -1) {
+            const sticker = page.stickers[stickerIndex];
+            const maxZ = Math.max(...page.stickers.map(s => s.zIndex));
+            page.stickers[stickerIndex] = {
+              ...sticker,
+              zIndex: maxZ + 1,
+            };
+            state.currentJournal.updatedAt = new Date();
+            state.isDirty = true;
+            break;
+          }
+        }
+      }
+    },
+
+    sendStickerToBack: (state, action: PayloadAction<string>) => {
+      if (state.currentJournal) {
+        for (const page of state.currentJournal.pages) {
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload);
+          if (stickerIndex !== -1) {
+            const sticker = page.stickers[stickerIndex];
+            const minZ = Math.min(...page.stickers.map(s => s.zIndex));
+            page.stickers[stickerIndex] = {
+              ...sticker,
+              zIndex: Math.max(1, minZ - 1),
+            };
+            state.currentJournal.updatedAt = new Date();
+            state.isDirty = true;
+            break;
+          }
+        }
+      }
+    },
+
+    sendStickerBehindText: (state, action: PayloadAction<string>) => {
+      if (state.currentJournal) {
+        for (const page of state.currentJournal.pages) {
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload);
+          if (stickerIndex !== -1) {
+            const sticker = page.stickers[stickerIndex];
+            const backgroundStickers = page.stickers.filter(s => s.zIndex < 1000000000);
+            const maxBackgroundZ = Math.max(0, ...backgroundStickers.map(s => s.zIndex));
+            page.stickers[stickerIndex] = {
+              ...sticker,
+              zIndex: Math.min(maxBackgroundZ + 1, 999999999),
+            };
+            state.currentJournal.updatedAt = new Date();
+            state.isDirty = true;
+            break;
+          }
+        }
+      }
+    },
+
+    sendStickerAboveText: (state, action: PayloadAction<string>) => {
+      if (state.currentJournal) {
+        for (const page of state.currentJournal.pages) {
+          const stickerIndex = page.stickers.findIndex((s: StickerInstance) => s.id === action.payload);
+          if (stickerIndex !== -1) {
+            const sticker = page.stickers[stickerIndex];
+            const foregroundStickers = page.stickers.filter(s => s.zIndex >= 1000000000);
+            const maxForegroundZ = Math.max(1000000000, ...foregroundStickers.map(s => s.zIndex));
+            page.stickers[stickerIndex] = {
+              ...sticker,
+              zIndex: maxForegroundZ + 1,
+            };
+            state.currentJournal.updatedAt = new Date();
+            state.isDirty = true;
+            break;
+          }
+        }
+      }
+    },
+
     setCurrentSpread: (state, action: PayloadAction<number>) => {
       state.currentSpreadIndex = Math.max(0, action.payload);
       // Sync page index with spread index
@@ -266,6 +344,10 @@ export const {
   addSticker,
   updateSticker,
   removeSticker,
+  sendStickerToFront,
+  sendStickerToBack,
+  sendStickerBehindText,
+  sendStickerAboveText,
   setCurrentSpread,
   setCurrentPage,
   nextSpread,

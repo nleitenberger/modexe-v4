@@ -1,9 +1,6 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-} from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native-gesture-handler';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Journal, JournalPage, PageSize } from '../../types/journal.types';
@@ -17,6 +14,7 @@ interface JournalSpreadProps {
 
 const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
   const { currentSpreadIndex, currentPageIndex } = useSelector((state: RootState) => state.journal);
+  const isTransforming = useSelector((state: RootState) => state.sticker.isTransforming);
   const { width: screenWidth, height: screenHeight, isPortrait, isLandscape } = useOrientation();
 
   // Get page size configuration
@@ -63,6 +61,8 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
         style={styles.scrollContainer}
         contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!isTransforming}
+        nestedScrollEnabled={false}
       >
         <View style={[
           styles.singlePageSpread, 
@@ -90,6 +90,8 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
       style={styles.scrollContainer}
       contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
       showsVerticalScrollIndicator={false}
+      scrollEnabled={!isTransforming}
+      nestedScrollEnabled={false}
     >
       <View style={[
         styles.spread, 

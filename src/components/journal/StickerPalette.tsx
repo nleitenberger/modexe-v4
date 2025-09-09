@@ -184,7 +184,7 @@ const StickerPalette: React.FC = () => {
       position: { x: Math.random() * 200 + 50, y: Math.random() * 200 + 50 },
       rotation: 0,
       scale: 1,
-      zIndex: Date.now(),
+      zIndex: Date.now() + 1000000000, // Start above text layer
       pageId: targetPage.id,
       createdAt: new Date(),
     };

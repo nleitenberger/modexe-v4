@@ -3,13 +3,16 @@ import {
   View,
   StyleSheet,
   Text,
-  TouchableOpacity,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import { JournalPage } from '../../types/journal.types';
 import { updatePageContent } from '../../store/journalSlice';
-import DraggableSticker from '../stickers/DraggableSticker';
+import { selectSticker } from '../../store/stickerSlice';
 import TextWithStickers from './TextWithStickers';
+import DraggableSticker from '../stickers/DraggableSticker';
+import { TEXT_LAYER_Z_INDEX } from '../../constants/layers';
 
 interface JournalPageComponentProps {
   page: JournalPage;
@@ -23,6 +26,7 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
   isLeftPage,
 }) => {
   const dispatch = useDispatch();
+  const isTransforming = useSelector((state: RootState) => state.sticker.isTransforming);
   const [isEditing, setIsEditing] = useState(false);
   const [localText, setLocalText] = useState(page.content.text);
 
@@ -54,41 +58,60 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
     setIsEditing(false);
   };
 
-  const handleTextBlur = () => {
-    handleTextSubmit();
+  const handlePageTap = () => {
+  if (isTransforming) return;
+    // Deselect any selected stickers when tapping on empty page area
+    dispatch(selectSticker(null));
   };
 
   return (
-    <View style={[styles.page, { backgroundColor: page.backgroundColor }]}>
-      {/* Page number */}
-      <Text style={[styles.pageNumber, isLeftPage ? styles.leftPageNumber : styles.rightPageNumber]}>
-        {page.pageNumber + 1}
-      </Text>
+    <TouchableWithoutFeedback onPress={handlePageTap}>
+  <View style={[styles.page, { backgroundColor: page.backgroundColor }]} pointerEvents={isTransforming ? 'box-none' : 'auto'}>
+        {/* Page number */}
+        <Text style={[styles.pageNumber, isLeftPage ? styles.leftPageNumber : styles.rightPageNumber]}>
+          {page.pageNumber + 1}
+        </Text>
 
-      {/* Content area - Full page text editing with sticker wrapping */}
-      <View style={styles.contentArea}>
-        {/* Text with automatic wrapping around stickers */}
-        <TextWithStickers
-          page={page}
-          width={width - 48} // Account for page padding
-          height={(page as any).height || 600} // Use dynamic height based on page size
-          isEditing={isEditing}
-          text={localText}
-          onTextChange={handleTextChange}
-          onEditingStart={handleEditingStart}
-          onEditingEnd={handleEditingEnd}
-        />
+        {/* Content area - Layered rendering: Background stickers -> Text -> Foreground stickers */}
+        <View style={styles.contentArea}>
+        {/* Layer 1: Background stickers (behind text) */}
+        {page.stickers
+          .filter(sticker => sticker.zIndex < TEXT_LAYER_Z_INDEX)
+          .map((sticker) => (
+            <DraggableSticker
+              key={sticker.id}
+              sticker={sticker}
+              pageWidth={width}
+            />
+          ))}
 
-        {/* Stickers */}
-        {page.stickers.map((sticker) => (
-          <DraggableSticker
-            key={sticker.id}
-            sticker={sticker}
-            pageWidth={width}
+        {/* Layer 2: Text layer */}
+        <View style={styles.textLayer}>
+          <TextWithStickers
+            page={page}
+            width={width - 48} // Account for page padding
+            height={(page as any).height || 600} // Use dynamic height based on page size
+            isEditing={isEditing}
+            text={localText}
+            onTextChange={handleTextChange}
+            onEditingStart={handleEditingStart}
+            onEditingEnd={handleEditingEnd}
           />
-        ))}
+        </View>
+
+        {/* Layer 3: Foreground stickers (above text) */}
+        {page.stickers
+          .filter(sticker => sticker.zIndex >= TEXT_LAYER_Z_INDEX)
+          .map((sticker) => (
+            <DraggableSticker
+              key={sticker.id}
+              sticker={sticker}
+              pageWidth={width}
+            />
+          ))}
+        </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
@@ -120,6 +143,14 @@ const styles = StyleSheet.create({
     flex: 1,
     position: 'relative',
     marginTop: 16,
+  },
+  textLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: TEXT_LAYER_Z_INDEX,
   },
 });
 

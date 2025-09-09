@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { TextLayoutEngine } from '../../services/TextLayoutEngine';
-import { TextStyle, JournalPage } from '../../types/journal.types';
-import { StickerInstance } from '../../types/sticker.types';
+import { JournalPage } from '../../types/journal.types';
 
 interface TextWithStickersProps {
   page: JournalPage;
@@ -31,65 +29,32 @@ const TextWithStickers: React.FC<TextWithStickersProps> = ({
   onEditingStart,
   onEditingEnd,
 }) => {
-  const [textLayout, setTextLayout] = useState<any>(null);
-
-  // Create TextLayoutEngine instance
-  const textLayoutEngine = useMemo(() => {
-    return new TextLayoutEngine(page.content.textStyle, width, height);
-  }, [page.content.textStyle, width, height]);
-
-  // Calculate text layout when text or stickers change
-  useEffect(() => {
-    const calculateLayout = async () => {
-      if (!text.trim()) {
-        setTextLayout(null);
-        return;
-      }
-
-      try {
-        // Convert stickers to obstacles
-        const obstacles = TextLayoutEngine.stickersToObstacles(page.stickers, page.id);
-        
-        // Calculate text flow around obstacles
-        const layout = await textLayoutEngine.calculateTextFlow(text, obstacles);
-        setTextLayout(layout);
-      } catch (error) {
-        console.warn('Text layout calculation failed:', error);
-        setTextLayout(null);
-      }
-    };
-
-    calculateLayout();
-  }, [text, page.stickers, page.id, textLayoutEngine]);
-
-  // Render text lines with wrapping
-  const renderWrappedText = () => {
-    if (!textLayout || !textLayout.lines.length) {
+  // Simple text rendering without wrapping around obstacles
+  const renderSimpleText = () => {
+    if (!text.trim()) {
       return null;
     }
 
-    return textLayout.lines.map((line: any, lineIndex: number) => (
-      <View key={lineIndex} style={[styles.textLine, { top: line.yPosition }]}>
-        {line.segments.map((segment: any, segmentIndex: number) => (
-          <Text
-            key={segmentIndex}
-            style={[
-              styles.textSegment,
-              {
-                left: segment.startX,
-                fontSize: page.content.textStyle.fontSize,
-                color: page.content.textStyle.color,
-                lineHeight: page.content.textStyle.lineHeight > 5 
-                  ? page.content.textStyle.lineHeight  // Already a pixel value
-                  : page.content.textStyle.fontSize * page.content.textStyle.lineHeight, // It's a ratio
-              },
-            ]}
-          >
-            {segment.text}
-          </Text>
-        ))}
-      </View>
-    ));
+    const lineHeight = page.content.textStyle.lineHeight > 5 
+      ? page.content.textStyle.lineHeight  // Already a pixel value
+      : page.content.textStyle.fontSize * page.content.textStyle.lineHeight; // It's a ratio
+
+    return (
+      <Text
+        style={[
+          styles.simpleText,
+          {
+            fontSize: page.content.textStyle.fontSize,
+            color: page.content.textStyle.color,
+            lineHeight: lineHeight,
+            textAlign: page.content.textStyle.textAlign,
+            width: width,
+          },
+        ]}
+      >
+        {text}
+      </Text>
+    );
   };
 
   if (isEditing) {
@@ -131,7 +96,7 @@ const TextWithStickers: React.FC<TextWithStickersProps> = ({
     );
   }
 
-  // In display mode, show wrapped text or placeholder
+  // In display mode, show simple text or placeholder
   return (
     <TouchableOpacity
       style={[styles.textDisplay, { width, height }]}
@@ -139,8 +104,8 @@ const TextWithStickers: React.FC<TextWithStickersProps> = ({
       activeOpacity={1}
     >
       {text.trim() ? (
-        <View style={styles.wrappedTextContainer}>
-          {renderWrappedText()}
+        <View style={styles.textContainer}>
+          {renderSimpleText()}
         </View>
       ) : (
         <Text style={styles.placeholder}>Tap anywhere to start writing...</Text>
@@ -169,19 +134,13 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
   },
-  wrappedTextContainer: {
-    position: 'relative',
+  textContainer: {
+    flex: 1,
     width: '100%',
-    height: '100%',
   },
-  textLine: {
-    position: 'absolute',
-    width: '100%',
-    height: 24, // Default line height
-  },
-  textSegment: {
-    position: 'absolute',
+  simpleText: {
     fontFamily: 'System',
+    textAlignVertical: 'top',
   },
   placeholder: {
     fontSize: 16,
