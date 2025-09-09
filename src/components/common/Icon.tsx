@@ -12,7 +12,7 @@ export type IconName =
   // Social Platforms
   | 'instagram' | 'twitter' | 'tiktok' | 'youtube' | 'website' | 'link'
   // Actions
-  | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket' | 'more'
+  | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket' | 'more' | 'plus'
   // Stickers/Emotions
   | 'smile' | 'tree' | 'flower' | 'sun' | 'moon' | 'star' | 'lightning' | 'arrow-right' | 'warning' | 'fire';
 
@@ -210,6 +210,11 @@ const Icon: React.FC<IconProps> = ({ name, size = 'md', color = '#333', style })
 
       // Action Icons
       case 'new-entry':
+        return (
+          <Path d="M12 5v14m-7-7h14" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        );
+      
+      case 'plus':
         return (
           <Path d="M12 5v14m-7-7h14" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         );

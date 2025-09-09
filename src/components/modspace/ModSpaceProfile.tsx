@@ -20,7 +20,8 @@ import ProfileHeader from './widgets/ProfileHeader';
 import CustomizationPanel from './CustomizationPanel';
 import LayoutRenderer from './LayoutRenderer';
 import JournalFullscreenViewer from './JournalFullscreenViewer';
-import { useNavigation } from '@react-navigation/native';
+import FloatingActionButton from './FloatingActionButton';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -101,10 +102,11 @@ const ModSpaceProfile: React.FC = () => {
   );
   const { isPortrait } = useOrientation();
   const { currentTheme } = useTheme();
-  const [showNewEntryOptions, setShowNewEntryOptions] = React.useState(false);
   const [showCustomizationPanel, setShowCustomizationPanel] = React.useState(false);
   const [selectedEntry, setSelectedEntry] = React.useState<SharedContentItem | null>(null);
   const [showFullscreenViewer, setShowFullscreenViewer] = React.useState(false);
+  const fabRef = React.useRef<any>(null);
+  const [fabKey, setFabKey] = React.useState(0);
   
   // Create theme-aware styles
   const themedStyles = createThemedStyles(currentTheme);
@@ -112,12 +114,7 @@ const ModSpaceProfile: React.FC = () => {
   // Get combined content (journal entries + media items)
   const sharedContent = combineSharedContent(currentModSpace);
 
-  const handleNewEntryPress = () => {
-    setShowNewEntryOptions(true);
-  };
-
   const handleCreateJournal = () => {
-    setShowNewEntryOptions(false);
     // Create journal directly without modal
     const defaultTitle = `Journal Entry - ${new Date().toLocaleDateString()}`;
     dispatch(createJournal({ title: defaultTitle }));
@@ -126,13 +123,10 @@ const ModSpaceProfile: React.FC = () => {
   };
 
   const handleCreateMedia = () => {
-    setShowNewEntryOptions(false);
+    // Reset FAB immediately when media button is pressed
+    setFabKey(prev => prev + 1);
     // TODO: Implement media creation functionality
     Alert.alert('Media Post', 'Media post creation coming soon!');
-  };
-
-  const handleCancelNewEntry = () => {
-    setShowNewEntryOptions(false);
   };
 
   const handleCustomizePress = () => {
@@ -141,6 +135,8 @@ const ModSpaceProfile: React.FC = () => {
 
   const handleCustomizationClose = () => {
     setShowCustomizationPanel(false);
+    // Reset FAB when customization panel is closed
+    setFabKey(prev => prev + 1);
   };
 
   const handleCustomizationSave = () => {
@@ -284,6 +280,14 @@ const ModSpaceProfile: React.FC = () => {
 
 
 
+  // Reset FAB state when returning to this screen
+  useFocusEffect(
+    React.useCallback(() => {
+      // Force complete remount of FAB by changing its key
+      setFabKey(prev => prev + 1);
+    }, [])
+  );
+
   useEffect(() => {
     // Create a default ModSpace if none exists
     if (!currentModSpace && !isLoading) {
@@ -307,27 +311,38 @@ const ModSpaceProfile: React.FC = () => {
 
   if (!currentModSpace) {
     return (
-      <SafeAreaView style={themedStyles.container}>
-        <View style={themedStyles.emptyContainer}>
-          <View style={themedStyles.emptyTextContainer}>
-            <Text style={themedStyles.emptyText}>Welcome to ModSpace!</Text>
-            <Icon name="rocket" size="md" color={currentTheme.primaryColor} style={{ marginLeft: 8 }} />
+      <View style={themedStyles.container}>
+        <SafeAreaView style={themedStyles.container}>
+          <View style={themedStyles.emptyContainer}>
+            <View style={themedStyles.emptyTextContainer}>
+              <Text style={themedStyles.emptyText}>Welcome to ModSpace!</Text>
+              <Icon name="rocket" size="md" color={currentTheme.primaryColor} style={{ marginLeft: 8 }} />
+            </View>
+            <Text style={themedStyles.emptySubText}>
+              Your personal profile and content hub
+            </Text>
+            <TouchableOpacity 
+              style={themedStyles.createButton}
+              onPress={() => dispatch(createModSpace({
+                userId: 'user-1',
+                username: 'journaler',
+                displayName: 'My Journal Space',
+              }))}
+            >
+              <Text style={themedStyles.createButtonText}>Create Your ModSpace</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={themedStyles.emptySubText}>
-            Your personal profile and content hub
-          </Text>
-          <TouchableOpacity 
-            style={themedStyles.createButton}
-            onPress={() => dispatch(createModSpace({
-              userId: 'user-1',
-              username: 'journaler',
-              displayName: 'My Journal Space',
-            }))}
-          >
-            <Text style={themedStyles.createButtonText}>Create Your ModSpace</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+
+        {/* Floating Action Button */}
+        <FloatingActionButton
+          key={fabKey}
+          ref={fabRef}
+          onJournalEntry={handleCreateJournal}
+          onMediaEntry={handleCreateMedia}
+          onCustomize={handleCustomizePress}
+        />
+      </View>
     );
   }
 
@@ -341,36 +356,6 @@ const ModSpaceProfile: React.FC = () => {
         {/* Profile Header with integrated stats - extends into notch area */}
         <ProfileHeader modspace={currentModSpace} />
 
-        {/* Quick Actions */}
-        <View style={[
-          themedStyles.quickActionsContainer, 
-          { paddingHorizontal: isPortrait ? 16 : 32 }
-        ]}>
-          <TouchableOpacity 
-            style={themedStyles.actionButton}
-            onPress={handleNewEntryPress}
-          >
-            <View style={themedStyles.actionButtonContent}>
-              <Icon name="new-entry" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
-              <Text style={themedStyles.actionButtonText}>New Entry</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={themedStyles.actionButton}>
-            <View style={themedStyles.actionButtonContent}>
-              <Icon name="share" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
-              <Text style={themedStyles.actionButtonText}>Share Entry</Text>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={themedStyles.actionButton}
-            onPress={handleCustomizePress}
-          >
-            <View style={themedStyles.actionButtonContent}>
-              <Icon name="customize" size="sm" color={currentTheme.textColor} style={{ marginRight: 6 }} />
-              <Text style={themedStyles.actionButtonText}>Customize</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
 
         {/* Content Section Header */}
         <View style={[
@@ -409,53 +394,6 @@ const ModSpaceProfile: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* New Entry Options Modal */}
-      <Modal
-        visible={showNewEntryOptions}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={handleCancelNewEntry}
-      >
-        <View style={themedStyles.modalOverlay}>
-          <View style={themedStyles.modalContent}>
-            <Text style={themedStyles.modalTitle}>Create New Entry</Text>
-            <Text style={themedStyles.modalSubtitle}>
-              Choose the type of content you'd like to create
-            </Text>
-            
-            <View style={themedStyles.entryOptionsContainer}>
-              <TouchableOpacity 
-                style={themedStyles.entryOption}
-                onPress={handleCreateJournal}
-              >
-                <Icon name="edit" size="xl" color={currentTheme.primaryColor} />
-                <Text style={themedStyles.entryOptionTitle}>Journal Entry</Text>
-                <Text style={themedStyles.entryOptionDescription}>
-                  Write and design with text and stickers
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={themedStyles.entryOption}
-                onPress={handleCreateMedia}
-              >
-                <Icon name="media" size="xl" color={currentTheme.successColor || '#34C759'} />
-                <Text style={themedStyles.entryOptionTitle}>Media Post</Text>
-                <Text style={themedStyles.entryOptionDescription}>
-                  Share photos, videos, or other media
-                </Text>
-              </TouchableOpacity>
-            </View>
-            
-            <TouchableOpacity 
-              style={[themedStyles.modalButton, themedStyles.modalCancelButton]}
-              onPress={handleCancelNewEntry}
-            >
-              <Text style={themedStyles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
 
       {/* Customization Panel */}
       <CustomizationPanel
@@ -486,6 +424,15 @@ const ModSpaceProfile: React.FC = () => {
         onClose={handleFullscreenClose}
         onEdit={handleFullscreenEdit}
         onDelete={handleFullscreenDelete}
+      />
+
+      {/* Floating Action Button */}
+      <FloatingActionButton
+        key={fabKey}
+        ref={fabRef}
+        onJournalEntry={handleCreateJournal}
+        onMediaEntry={handleCreateMedia}
+        onCustomize={handleCustomizePress}
       />
 
     </View>
