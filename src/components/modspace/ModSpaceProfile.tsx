@@ -10,6 +10,7 @@ import {
   TextInput,
   Alert,
   Dimensions,
+  RefreshControl,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -95,6 +96,18 @@ const combineSharedContent = (modspace: any): SharedContentItem[] => {
 };
 
 const ModSpaceProfile: React.FC = () => {
+  // Pull-to-refresh state
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  // Handler for pull-to-refresh
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    // Simulate refresh (replace with your actual reload logic)
+    setTimeout(() => {
+      // You could dispatch an action to reload modspace/profile data here
+      setRefreshing(false);
+    }, 1200);
+  }, []);
   const dispatch = useDispatch();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { currentModSpace, isLoading } = useSelector(
@@ -348,10 +361,17 @@ const ModSpaceProfile: React.FC = () => {
 
   return (
     <View style={themedStyles.container}>
-      <ScrollView 
+      <ScrollView
         style={themedStyles.scrollView}
         contentContainerStyle={themedStyles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={currentTheme.primaryColor}
+          />
+        }
       >
         {/* Profile Header with integrated stats - extends into notch area */}
         <ProfileHeader modspace={currentModSpace} />

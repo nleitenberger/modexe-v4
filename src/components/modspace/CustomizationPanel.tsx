@@ -10,6 +10,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useOrientation } from '../../utils/useOrientation';
 import Icon, { IconName } from '../common/Icon';
@@ -76,6 +77,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
 }) => {
   const { currentTheme, previewTheme, setPreviewTheme, applyPreviewTheme, canUndo, canRedo, undoTheme, redoTheme } = useTheme();
   const { isPortrait } = useOrientation();
+  const insets = useSafeAreaInsets();
   
   const [activeTab, setActiveTab] = useState<CustomizationTab>('themes');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -333,7 +335,8 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
               borderTopWidth: 1,
               borderTopColor: theme.textColor + '20',
               paddingHorizontal: theme.spacing.medium,
-              paddingVertical: theme.spacing.medium,
+              paddingTop: theme.spacing.small,
+              paddingBottom: Math.max(theme.spacing.large, insets.bottom + theme.spacing.medium),
             }
           ]}>
             <View style={styles.footerContent}>
@@ -364,8 +367,10 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   {
                     backgroundColor: hasUnsavedChanges ? theme.primaryColor : theme.textColor + '20',
                     borderRadius: theme.effects.borderRadius,
-                    paddingHorizontal: theme.spacing.large,
-                    paddingVertical: theme.spacing.medium,
+                    paddingHorizontal: theme.spacing.medium,
+                    paddingVertical: theme.spacing.small,
+                    marginHorizontal: theme.spacing.medium,
+                    marginBottom: theme.spacing.small,
                   }
                 ]}
                 onPress={handleSave}
@@ -375,7 +380,7 @@ const CustomizationPanel: React.FC<CustomizationPanelProps> = ({
                   styles.saveButtonText,
                   {
                     color: hasUnsavedChanges ? theme.backgroundColor : theme.textColor + '60',
-                    fontSize: theme.font.size.medium,
+                    fontSize: theme.font.size.small,
                     fontWeight: '600',
                   }
                 ]}>
@@ -569,6 +574,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    minHeight: 200, // Ensure minimum content height
   },
   footer: {
     shadowColor: '#000',
@@ -584,6 +590,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    minHeight: 44, // Minimum touch target height
   },
   previewIndicator: {
     flexDirection: 'row',

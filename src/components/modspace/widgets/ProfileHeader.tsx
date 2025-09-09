@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+// Removed BlurView for smoother fade
 import {
   View,
   Text,
@@ -91,8 +93,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       .substring(0, 2);
   };
 
-  const baseHeaderHeight = isPortrait ? 200 : 150;
-  const statusBarHeight = StatusBar.currentHeight || 0;
+  // Compact header height
+  const baseHeaderHeight = isPortrait ? 120 : 80;
   const totalHeaderHeight = baseHeaderHeight + safeAreaInsets.top;
   const avatarSize = isPortrait ? 100 : 80;
   
@@ -100,22 +102,53 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
   const themedStyles = createThemedStyles(currentTheme);
 
   return (
-    <View style={[themedStyles.container, { minHeight: totalHeaderHeight, paddingTop: safeAreaInsets.top }]}>
-      {/* Cover Image */}
+    <View style={[themedStyles.container, { minHeight: totalHeaderHeight, paddingTop: 0 }]}> 
+      {/* Cover Image - fill top area */}
       <ImageBackground
         source={localCover ? { uri: localCover } : undefined}
-        style={[themedStyles.coverImage, { height: baseHeaderHeight * 0.6 }]}
+        style={{
+          width: '100%',
+          height: baseHeaderHeight + safeAreaInsets.top,
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+        }}
         imageStyle={themedStyles.coverImageStyle}
       >
+        {/* LinearGradient overlay at top for status bar visibility and smooth fade */}
+        <LinearGradient
+          colors={["rgba(255,255,255,0.7)", "rgba(255,255,255,0.0)"]}
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: safeAreaInsets.top + 32,
+            zIndex: 10,
+          }}
+        />
         {!localCover && (
-          <View style={[themedStyles.defaultCover, { height: baseHeaderHeight * 0.6 }]}>
+          <View style={[themedStyles.defaultCover, { height: baseHeaderHeight + safeAreaInsets.top }]}> 
             <Icon name="book" size={48} color="rgba(255, 255, 255, 0.8)" />
           </View>
         )}
-        
-        {/* Edit Button */}
+        {/* Edit Button - moved to bottom right of banner */}
         <TouchableOpacity 
-          style={themedStyles.editButton}
+          style={{
+            position: 'absolute',
+            right: 16,
+            bottom: 16,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            borderRadius: 20,
+            width: 40,
+            height: 40,
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 2,
+          }}
           onPress={handleEditProfile}
         >
           <Icon 
@@ -124,7 +157,6 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
             color="white" 
           />
         </TouchableOpacity>
-
         {/* Cover Image Picker Button - Only shown in edit mode */}
         {isEditMode && (
           <TouchableOpacity
@@ -146,6 +178,8 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
           </TouchableOpacity>
         )}
       </ImageBackground>
+      {/* Spacer for safe area */}
+      <View style={{ height: baseHeaderHeight + safeAreaInsets.top }} />
 
       {/* Profile Info */}
       <View style={[themedStyles.profileInfo, { paddingTop: avatarSize / 2 + 10 }]}>
@@ -257,30 +291,46 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
       </View>
 
       {/* Stats Section - Outside of profileInfo to span full width */}
-      <View style={themedStyles.statsContainer}>
-        <View style={themedStyles.statItem}>
-          <Text style={themedStyles.statNumber}>
-            {modspace.stats.totalEntries}
-          </Text>
-          <Text style={themedStyles.statLabel}>Entries</Text>
+      {/* Compact Stats Section - 2 circles, bottom right */}
+      <View style={{
+        position: 'absolute',
+        right: 16,
+        bottom: 16,
+        flexDirection: 'row',
+        gap: 16,
+        zIndex: 3,
+      }}>
+        <View style={{
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+          backgroundColor: currentTheme.surfaceColor || '#fff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.12,
+          shadowRadius: 4,
+          elevation: 4,
+        }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: currentTheme.primaryColor }}>{modspace.stats.followers}</Text>
+          <Text style={{ fontSize: 10, color: currentTheme.textColor, opacity: 0.7 }}>Followers</Text>
         </View>
-        <View style={themedStyles.statItem}>
-          <Text style={themedStyles.statNumber}>
-            {modspace.stats.totalViews}
-          </Text>
-          <Text style={themedStyles.statLabel}>Views</Text>
-        </View>
-        <View style={themedStyles.statItem}>
-          <Text style={themedStyles.statNumber}>
-            {modspace.stats.followers}
-          </Text>
-          <Text style={themedStyles.statLabel}>Followers</Text>
-        </View>
-        <View style={themedStyles.statItem}>
-          <Text style={themedStyles.statNumber}>
-            {modspace.stats.following}
-          </Text>
-          <Text style={themedStyles.statLabel}>Following</Text>
+        <View style={{
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+          backgroundColor: currentTheme.surfaceColor || '#fff',
+          justifyContent: 'center',
+          alignItems: 'center',
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.12,
+          shadowRadius: 4,
+          elevation: 4,
+        }}>
+          <Text style={{ fontSize: 18, fontWeight: '700', color: currentTheme.primaryColor }}>{modspace.stats.totalEntries}</Text>
+          <Text style={{ fontSize: 10, color: currentTheme.textColor, opacity: 0.7 }}>Entries</Text>
         </View>
       </View>
     </View>
