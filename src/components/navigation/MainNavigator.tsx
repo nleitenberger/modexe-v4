@@ -240,8 +240,8 @@ const createLandscapeFABOverlayStyles = (theme: any) => {
     },
     menuContainer: {
       position: 'absolute',
-      bottom: 10, // Move down very close to tab bar
-      right: 140, // Move even further left to perfectly center above the FAB tab
+      bottom: 10,
+      right: 140,
       alignItems: 'center',
     },
     fabButton: {
@@ -491,7 +491,7 @@ const TabNavigator: React.FC = () => {
                   shadowOffset: { width: 0, height: focused ? 3 : 2 },
                   shadowOpacity: focused ? 0.27 : 0.25,
                   shadowRadius: focused ? 4.65 : 4,
-                  opacity: focused ? 1 : 0.8,
+                  opacity: showLandscapeFAB ? 0 : (focused ? 1 : 0.8), // Hide when menu is open
                 }}
               >
                 <Icon name="plus" size="lg" color="#FFFFFF" />
