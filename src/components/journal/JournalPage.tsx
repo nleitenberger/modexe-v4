@@ -3,13 +3,13 @@ import {
   View,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { JournalPage } from '../../types/journal.types';
 import { updatePageContent } from '../../store/journalSlice';
 import DraggableSticker from '../stickers/DraggableSticker';
+import TextWithStickers from './TextWithStickers';
 
 interface JournalPageComponentProps {
   page: JournalPage;
@@ -31,10 +31,12 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
     setLocalText(page.content.text);
   }, [page.content.text]);
 
-  const handlePagePress = () => {
-    if (!isEditing) {
-      setIsEditing(true);
-    }
+  const handleEditingStart = () => {
+    setIsEditing(true);
+  };
+
+  const handleEditingEnd = () => {
+    handleTextSubmit();
   };
 
   const handleTextChange = (text: string) => {
@@ -57,65 +59,25 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      style={[styles.page, { backgroundColor: page.backgroundColor }]}
-      onPress={handlePagePress}
-      activeOpacity={1}
-    >
+    <View style={[styles.page, { backgroundColor: page.backgroundColor }]}>
       {/* Page number */}
       <Text style={[styles.pageNumber, isLeftPage ? styles.leftPageNumber : styles.rightPageNumber]}>
         {page.pageNumber + 1}
       </Text>
 
-      {/* Content area */}
+      {/* Content area - Full page text editing with sticker wrapping */}
       <View style={styles.contentArea}>
-        {isEditing ? (
-          <TextInput
-            style={[
-              styles.textInput,
-              {
-                fontSize: page.content.textStyle.fontSize,
-                color: page.content.textStyle.color,
-                lineHeight: page.content.textStyle.fontSize * page.content.textStyle.lineHeight,
-                textAlign: page.content.textStyle.textAlign,
-              },
-            ]}
-            value={localText}
-            onChangeText={handleTextChange}
-            onBlur={handleTextBlur}
-            onSubmitEditing={handleTextSubmit}
-            multiline
-            autoFocus
-            placeholder="Start writing your story..."
-            placeholderTextColor="#999"
-            scrollEnabled={true}
-            textAlignVertical="top"
-          />
-        ) : (
-          <TouchableOpacity
-            style={styles.textDisplay}
-            onPress={handlePagePress}
-            activeOpacity={0.7}
-          >
-            {localText ? (
-              <Text
-                style={[
-                  styles.displayText,
-                  {
-                    fontSize: page.content.textStyle.fontSize,
-                    color: page.content.textStyle.color,
-                    lineHeight: page.content.textStyle.fontSize * page.content.textStyle.lineHeight,
-                    textAlign: page.content.textStyle.textAlign,
-                  },
-                ]}
-              >
-                {localText}
-              </Text>
-            ) : (
-              <Text style={styles.placeholder}>Tap to start writing...</Text>
-            )}
-          </TouchableOpacity>
-        )}
+        {/* Text with automatic wrapping around stickers */}
+        <TextWithStickers
+          page={page}
+          width={width - 48} // Account for page padding
+          height={(page as any).height || 600} // Use dynamic height based on page size
+          isEditing={isEditing}
+          text={localText}
+          onTextChange={handleTextChange}
+          onEditingStart={handleEditingStart}
+          onEditingEnd={handleEditingEnd}
+        />
 
         {/* Stickers */}
         {page.stickers.map((sticker) => (
@@ -126,65 +88,38 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
           />
         ))}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   page: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 32,
     position: 'relative',
+    backgroundColor: '#FAFAFA',
   },
   pageNumber: {
     fontSize: 12,
     color: '#666',
     fontWeight: '500',
-    marginBottom: 16,
+    position: 'absolute',
+    top: 8,
+    zIndex: 10,
   },
   leftPageNumber: {
     textAlign: 'left',
+    left: 24,
   },
   rightPageNumber: {
     textAlign: 'right',
+    right: 24,
   },
   contentArea: {
     flex: 1,
     position: 'relative',
-  },
-  textInput: {
-    flex: 1,
-    fontFamily: 'System',
-    fontSize: 16,
-    lineHeight: 24,
-    textAlignVertical: 'top',
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(0, 122, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 122, 255, 0.2)',
-    minHeight: 120,
-  },
-  textDisplay: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    minHeight: 120,
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-  },
-  displayText: {
-    fontFamily: 'System',
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  placeholder: {
-    fontSize: 16,
-    color: '#999',
-    fontStyle: 'italic',
-    lineHeight: 24,
+    marginTop: 16,
   },
 });
 

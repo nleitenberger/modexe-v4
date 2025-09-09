@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Journal, JournalPage, JournalState, RichTextContent } from '../types/journal.types';
+import { Journal, JournalPage, JournalState, RichTextContent, PageSize } from '../types/journal.types';
 import { StickerInstance } from '../types/sticker.types';
 import { generateJournalId, generatePageId } from '../utils/uniqueId';
 
@@ -17,10 +17,11 @@ const journalSlice = createSlice({
   name: 'journal',
   initialState,
   reducers: {
-    createJournal: (state, action: PayloadAction<{ title: string }>) => {
+    createJournal: (state, action: PayloadAction<{ title: string; pageSize?: PageSize }>) => {
       const newJournal: Journal = {
         id: generateJournalId(),
         title: action.payload.title,
+        pageSize: action.payload.pageSize || PageSize.JOURNAL, // Default to journal size
         pages: [
           {
             id: generatePageId(0),
@@ -31,7 +32,7 @@ const journalSlice = createSlice({
               textStyle: {
                 fontSize: 16,
                 fontFamily: 'System',
-                lineHeight: 24,
+                lineHeight: 1.5,
                 textAlign: 'left',
                 color: '#000000',
               },
@@ -49,7 +50,7 @@ const journalSlice = createSlice({
               textStyle: {
                 fontSize: 16,
                 fontFamily: 'System',
-                lineHeight: 24,
+                lineHeight: 1.5,
                 textAlign: 'left',
                 color: '#000000',
               },
@@ -95,6 +96,17 @@ const journalSlice = createSlice({
     ) => {
       if (state.currentJournal && state.currentJournal.id === action.payload.id) {
         state.currentJournal.title = action.payload.title;
+        state.currentJournal.updatedAt = new Date();
+        state.isDirty = true;
+      }
+    },
+
+    updateJournalPageSize: (
+      state,
+      action: PayloadAction<{ id: string; pageSize: PageSize }>
+    ) => {
+      if (state.currentJournal && state.currentJournal.id === action.payload.id) {
+        state.currentJournal.pageSize = action.payload.pageSize;
         state.currentJournal.updatedAt = new Date();
         state.isDirty = true;
       }
@@ -215,7 +227,7 @@ const journalSlice = createSlice({
             textStyle: {
               fontSize: 16,
               fontFamily: 'System',
-              lineHeight: 24,
+              lineHeight: 1.5,
               textAlign: 'left',
               color: '#000000',
             },
@@ -249,6 +261,7 @@ export const {
   loadJournal,
   loadJournalFromSharedEntry,
   updateJournalTitle,
+  updateJournalPageSize,
   updatePageContent,
   addSticker,
   updateSticker,

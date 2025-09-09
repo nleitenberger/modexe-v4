@@ -14,10 +14,12 @@ import { togglePalette } from '../../store/stickerSlice';
 import { shareJournalEntry, updateSharedEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { generateSharedEntryId } from '../../utils/uniqueId';
+import { getPageSizeDisplayName } from '../../utils/pageSize';
 import Icon from '../common/Icon';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/MainNavigator';
+import PageSizeSelector from './PageSizeSelector';
 
 const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
@@ -25,9 +27,18 @@ const JournalToolbar: React.FC = () => {
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [showPostModal, setShowPostModal] = React.useState(false);
+  const [showPageSizeSelector, setShowPageSizeSelector] = React.useState(false);
 
   const handleToggleStickers = () => {
     dispatch(togglePalette());
+  };
+
+  const handleOpenPageSizeSelector = () => {
+    setShowPageSizeSelector(true);
+  };
+
+  const handleClosePageSizeSelector = () => {
+    setShowPageSizeSelector(false);
   };
 
   const handleOpenPostModal = () => {
@@ -124,6 +135,16 @@ const JournalToolbar: React.FC = () => {
           </Text>
         </TouchableOpacity>
         
+        {/* Center - Page size button */}
+        <TouchableOpacity
+          style={styles.pageSizeButton}
+          onPress={handleOpenPageSizeSelector}
+        >
+          <Text style={styles.pageSizeButtonText}>
+            {currentJournal ? getPageSizeDisplayName(currentJournal.pageSize) : 'Journal'}
+          </Text>
+        </TouchableOpacity>
+        
         {/* Right side - Post button */}
         <TouchableOpacity
           style={styles.postButton}
@@ -183,6 +204,12 @@ const JournalToolbar: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Page Size Selector */}
+      <PageSizeSelector
+        visible={showPageSizeSelector}
+        onClose={handleClosePageSizeSelector}
+      />
     </SafeAreaView>
   );
 };
@@ -220,6 +247,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#007AFF',
+  },
+  pageSizeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+    backgroundColor: '#f9f9f9',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  pageSizeButtonText: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: '#666',
   },
   activeButton: {
     backgroundColor: '#007AFF',

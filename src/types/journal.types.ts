@@ -1,9 +1,27 @@
 import { StickerInstance } from './sticker.types';
 
+export enum PageSize {
+  POCKETBOOK = 'pocketbook',
+  JOURNAL = 'journal', 
+  A4 = 'a4'
+}
+
+export interface PageDimensions {
+  aspectRatio: number;
+  minHeight: number;
+  maxHeight: number;
+  maxWidth: number;
+  padding: {
+    horizontal: number;
+    vertical: number;
+  };
+}
+
 export interface Journal {
   id: string;
   title: string;
   pages: JournalPage[];
+  pageSize: PageSize;
   createdAt: Date;
   updatedAt: Date;
   metadata?: {

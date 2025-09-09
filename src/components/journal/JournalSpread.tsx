@@ -6,8 +6,9 @@ import {
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
-import { Journal, JournalPage } from '../../types/journal.types';
+import { Journal, JournalPage, PageSize } from '../../types/journal.types';
 import { useOrientation } from '../../utils/useOrientation';
+import { calculatePageDimensions, getPageConfig } from '../../utils/pageSize';
 import JournalPageComponent from './JournalPage';
 
 interface JournalSpreadProps {
@@ -16,16 +17,21 @@ interface JournalSpreadProps {
 
 const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
   const { currentSpreadIndex, currentPageIndex } = useSelector((state: RootState) => state.journal);
-  const { width: screenWidth, isPortrait, isLandscape } = useOrientation();
+  const { width: screenWidth, height: screenHeight, isPortrait, isLandscape } = useOrientation();
 
-  // Responsive layout constants
-  const MOBILE_PADDING = 16;
-  const DESKTOP_PADDING = 32;
-  const PAGE_GAP = 12;
-  const MAX_JOURNAL_WIDTH = 800; // Maximum width for journal
+  // Get page size configuration
+  const pageSize = journal.pageSize || PageSize.JOURNAL; // Default to journal if not set
+  const pageConfig = getPageConfig(pageSize);
   
-  const padding = isPortrait ? MOBILE_PADDING : DESKTOP_PADDING;
-  const availableWidth = Math.min(screenWidth - (padding * 2), MAX_JOURNAL_WIDTH);
+  // Calculate responsive dimensions based on page size preference
+  const pageDimensions = calculatePageDimensions(
+    pageSize, 
+    screenWidth, 
+    screenHeight, 
+    isPortrait
+  );
+  
+  const PAGE_GAP = 12;
 
   const getSpreadPages = (): { left: JournalPage | null; right: JournalPage | null; current: JournalPage | null } => {
     if (isPortrait) {
@@ -49,25 +55,27 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
   };
 
   const { left: leftPage, right: rightPage, current: currentPage } = getSpreadPages();
-  
-  // Calculate page dimensions based on orientation
-  const pageWidth = isPortrait 
-    ? availableWidth - 24 // Single page with some margin
-    : (availableWidth - PAGE_GAP) / 2; // Two pages side by side
 
   if (isPortrait) {
     // Single page layout for portrait mode
     return (
       <ScrollView
         style={styles.scrollContainer}
-        contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: padding }]}
+        contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.singlePageSpread, { width: availableWidth }]}>
+        <View style={[
+          styles.singlePageSpread, 
+          { 
+            width: pageDimensions.width,
+            height: pageDimensions.height,
+            aspectRatio: pageConfig.aspectRatio,
+          }
+        ]}>
           {currentPage && (
             <JournalPageComponent
               page={currentPage}
-              width={pageWidth}
+              width={pageDimensions.width}
               isLeftPage={currentPageIndex % 2 === 0}
             />
           )}
@@ -80,30 +88,50 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
   return (
     <ScrollView
       style={styles.scrollContainer}
-      contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: padding }]}
+      contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.spread, { width: availableWidth }]}>
+      <View style={[
+        styles.spread, 
+        { 
+          width: (pageDimensions.width * 2) + PAGE_GAP,
+          height: pageDimensions.height,
+        }
+      ]}>
         {/* Book binding shadow effect - only in landscape */}
         <View style={styles.binding} />
         
         {/* Left page */}
-        <View style={[styles.pageContainer, { width: pageWidth }]}>
+        <View style={[
+          styles.pageContainer, 
+          { 
+            width: pageDimensions.width,
+            height: pageDimensions.height,
+            aspectRatio: pageConfig.aspectRatio,
+          }
+        ]}>
           {leftPage && (
             <JournalPageComponent
               page={leftPage}
-              width={pageWidth}
+              width={pageDimensions.width}
               isLeftPage={true}
             />
           )}
         </View>
 
         {/* Right page */}
-        <View style={[styles.pageContainer, { width: pageWidth }]}>
+        <View style={[
+          styles.pageContainer, 
+          { 
+            width: pageDimensions.width,
+            height: pageDimensions.height,
+            aspectRatio: pageConfig.aspectRatio,
+          }
+        ]}>
           {rightPage && (
             <JournalPageComponent
               page={rightPage}
-              width={pageWidth}
+              width={pageDimensions.width}
               isLeftPage={false}
             />
           )}
@@ -135,8 +163,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 5,
-    minHeight: 500,
-    maxWidth: 400,
   },
   // Dual page layout for landscape
   spread: {
@@ -155,7 +181,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 6,
     elevation: 5,
-    minHeight: 500,
   },
   binding: {
     position: 'absolute',
@@ -169,8 +194,6 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   pageContainer: {
-    flex: 1,
-    minHeight: 500,
     backgroundColor: 'white',
   },
 });
