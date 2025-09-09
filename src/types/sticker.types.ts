@@ -39,7 +39,6 @@ export interface StickerState {
   selectedStickers: string[]; // Array of sticker IDs for multi-select
   isPaletteExpanded: boolean;
   activeCategoryId: string | null;
-  isAssetDrawerOpen: boolean;
   multiSelectMode: boolean;
   favoriteStickers: string[]; // Array of sticker IDs marked as favorites
   recentStickers: string[]; // Array of recently used sticker IDs

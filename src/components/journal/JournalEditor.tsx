@@ -24,7 +24,6 @@ import { useOrientation } from '../../utils/useOrientation';
 import JournalSpread from './JournalSpread';
 import JournalToolbar from './JournalToolbar';
 import StickerPalette from './StickerPalette';
-import StickerAssetDrawer from '../stickers/StickerAssetDrawer';
 
 
 const JournalEditor: React.FC = () => {
@@ -285,8 +284,6 @@ const JournalEditor: React.FC = () => {
             </View>
           )}
 
-          {/* Asset drawer for advanced sticker management */}
-          <StickerAssetDrawer />
         </View>
       </SafeAreaView>
     </GestureHandlerRootView>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -148,8 +148,17 @@ const StickerPalette: React.FC = () => {
     (state: RootState) => state.journal
   );
   const { isPortrait } = useOrientation();
+  const [showFavorites, setShowFavorites] = useState(true);
+  const [recentlyUsed, setRecentlyUsed] = useState<Sticker[]>([]);
 
   const activeCategory = availableStickers.find(cat => cat.id === activeCategoryId);
+
+  // Get frequently used stickers for quick access
+  const getFavoriteStickers = (): Sticker[] => {
+    const allStickers = availableStickers.flatMap(cat => cat.stickers);
+    // For now, just return the first sticker from each category as favorites
+    return availableStickers.map(cat => cat.stickers[0]).filter(Boolean);
+  };
 
   // Initialize sticker categories when component mounts
   useEffect(() => {
@@ -190,12 +199,28 @@ const StickerPalette: React.FC = () => {
     };
 
     dispatch(addSticker(newStickerInstance));
+    
+    // Add to recently used
+    setRecentlyUsed(prev => {
+      const filtered = prev.filter(s => s.id !== sticker.id);
+      return [sticker, ...filtered].slice(0, 6); // Keep only 6 recent stickers
+    });
+    
     dispatch(togglePalette());
   };
 
   const handleClose = () => {
     dispatch(togglePalette());
   };
+
+  const renderCompactSticker = ({ item: sticker }: { item: Sticker }) => (
+    <TouchableOpacity
+      style={styles.compactStickerButton}
+      onPress={() => handleStickerSelect(sticker)}
+    >
+      <Text style={styles.compactStickerEmoji}>{sticker.emoji}</Text>
+    </TouchableOpacity>
+  );
 
   const renderSticker = ({ item: sticker }: { item: Sticker }) => (
     <TouchableOpacity
@@ -209,54 +234,93 @@ const StickerPalette: React.FC = () => {
 
   return (
     <View style={styles.palette}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Stickers</Text>
-        <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-          <Icon name="close" size="sm" color="#666" />
+      {/* Compact Header */}
+      <View style={styles.compactHeader}>
+        <Text style={styles.compactTitle}>Assets</Text>
+        <TouchableOpacity style={styles.compactCloseButton} onPress={handleClose}>
+          <Icon name="close" size="xs" color="#666" />
         </TouchableOpacity>
       </View>
 
-      {/* Category tabs */}
+      {/* Quick Access Favorites */}
+      {(recentlyUsed.length > 0 || getFavoriteStickers().length > 0) && (
+        <View style={styles.quickAccessSection}>
+          <TouchableOpacity 
+            style={styles.sectionHeader}
+            onPress={() => setShowFavorites(!showFavorites)}
+          >
+            <Icon name={showFavorites ? "chevron-down" : "chevron-right"} size="xs" color="#666" />
+            <Text style={styles.sectionTitle}>Quick Access</Text>
+          </TouchableOpacity>
+          
+          {showFavorites && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.quickAccessContainer}
+              contentContainerStyle={styles.quickAccessContent}
+            >
+              {recentlyUsed.length > 0 && recentlyUsed.map((sticker) => (
+                <TouchableOpacity
+                  key={`recent-${sticker.id}`}
+                  style={styles.quickAccessButton}
+                  onPress={() => handleStickerSelect(sticker)}
+                >
+                  <Text style={styles.quickAccessEmoji}>{sticker.emoji}</Text>
+                </TouchableOpacity>
+              ))}
+              {recentlyUsed.length === 0 && getFavoriteStickers().map((sticker) => (
+                <TouchableOpacity
+                  key={`fav-${sticker.id}`}
+                  style={styles.quickAccessButton}
+                  onPress={() => handleStickerSelect(sticker)}
+                >
+                  <Text style={styles.quickAccessEmoji}>{sticker.emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          )}
+        </View>
+      )}
+
+      {/* Compact Category tabs */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.categoriesContainer}
-        contentContainerStyle={styles.categoriesContent}
+        style={styles.compactCategoriesContainer}
+        contentContainerStyle={styles.compactCategoriesContent}
       >
         {availableStickers.map((category) => (
           <TouchableOpacity
             key={category.id}
             style={[
-              styles.categoryTab,
+              styles.compactCategoryTab,
               activeCategoryId === category.id && styles.activeCategoryTab,
-              { backgroundColor: category.color },
             ]}
             onPress={() => handleCategorySelect(category.id)}
           >
-            <Text style={styles.categoryIcon}>{category.icon}</Text>
-            <Text style={styles.categoryName}>{category.name}</Text>
+            <Text style={styles.compactCategoryIcon}>{category.icon}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {/* Stickers grid */}
+      {/* Compact Stickers grid */}
       {activeCategory && activeCategory.stickers && activeCategory.stickers.length > 0 ? (
         <FlatList
           data={activeCategory.stickers}
           renderItem={renderSticker}
           keyExtractor={(item) => item.id}
-          numColumns={5}
-          style={styles.stickersGrid}
-          contentContainerStyle={styles.stickersContent}
+          numColumns={6}
+          style={styles.compactStickersGrid}
+          contentContainerStyle={styles.compactStickersContent}
           showsVerticalScrollIndicator={false}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>
+        <View style={styles.compactEmptyState}>
+          <Text style={styles.compactEmptyStateText}>
             {availableStickers.length === 0 
-              ? 'Loading stickers...' 
-              : 'No stickers available in this category'}
+              ? 'Loading...' 
+              : 'No stickers'}
           </Text>
         </View>
       )}
@@ -269,6 +333,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  // Legacy styles for backward compatibility
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -291,10 +356,96 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  closeButtonText: {
-    fontSize: 20,
-    color: '#666',
+  // New compact styles
+  compactHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e0e0e0',
+    minHeight: 40,
   },
+  compactTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  compactCloseButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Quick Access Section
+  quickAccessSection: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#e0e0e0',
+    paddingBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
+    marginLeft: 4,
+  },
+  quickAccessContainer: {
+    maxHeight: 50,
+  },
+  quickAccessContent: {
+    paddingHorizontal: 8,
+  },
+  quickAccessButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 2,
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+  },
+  quickAccessEmoji: {
+    fontSize: 16,
+  },
+  // Compact categories
+  compactCategoriesContainer: {
+    maxHeight: 50,
+  },
+  compactCategoriesContent: {
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+  },
+  compactCategoryTab: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 2,
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+  },
+  compactCategoryIcon: {
+    fontSize: 16,
+  },
+  activeCategoryTab: {
+    borderWidth: 1.5,
+    borderColor: '#007AFF',
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+  },
+  // Legacy category styles
   categoriesContainer: {
     maxHeight: 80,
   },
@@ -310,10 +461,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginRight: 8,
   },
-  activeCategoryTab: {
-    borderWidth: 2,
-    borderColor: '#007AFF',
-  },
   categoryIcon: {
     fontSize: 16,
     marginRight: 4,
@@ -323,6 +470,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#333',
   },
+  // Compact stickers grid
+  compactStickersGrid: {
+    flex: 1,
+  },
+  compactStickersContent: {
+    padding: 8,
+  },
+  compactStickerButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 6,
+    backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 2,
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+  },
+  compactStickerEmoji: {
+    fontSize: 14,
+  },
+  compactEmptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  compactEmptyStateText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+  },
+  // Legacy styles
   stickersGrid: {
     flex: 1,
   },
@@ -332,24 +512,24 @@ const styles = StyleSheet.create({
   stickerButton: {
     flex: 1,
     aspectRatio: 1,
-    margin: 3,
-    borderRadius: 8,
+    margin: 2,
+    borderRadius: 6,
     backgroundColor: '#f8f8f8',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 0.5,
     borderColor: '#e0e0e0',
   },
   stickerEmoji: {
-    fontSize: 18,
-    marginBottom: 2,
+    fontSize: 14,
+    marginBottom: 1,
   },
   stickerEmojiLandscape: {
-    fontSize: 14,
-    marginBottom: 2,
+    fontSize: 12,
+    marginBottom: 1,
   },
   stickerName: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#666',
     textAlign: 'center',
   },

@@ -9,7 +9,6 @@ const initialState: StickerState = {
   selectedStickers: [],
   isPaletteExpanded: false,
   activeCategoryId: null,
-  isAssetDrawerOpen: false,
   multiSelectMode: false,
   favoriteStickers: [],
   recentStickers: [],
@@ -140,14 +139,6 @@ const stickerSlice = createSlice({
       state.multiSelectMode = pageStickers.length > 1;
     },
 
-    // Asset drawer actions
-    toggleAssetDrawer: (state) => {
-      state.isAssetDrawerOpen = !state.isAssetDrawerOpen;
-    },
-
-    setAssetDrawerOpen: (state, action: PayloadAction<boolean>) => {
-      state.isAssetDrawerOpen = action.payload;
-    },
 
     // Favorites actions
     toggleFavorite: (state, action: PayloadAction<string>) => {
@@ -242,8 +233,6 @@ export const {
   clearMultiSelect,
   selectAllOnPage,
   // Asset drawer actions
-  toggleAssetDrawer,
-  setAssetDrawerOpen,
   // Favorites actions
   toggleFavorite,
   addToRecent,
