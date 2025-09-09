@@ -14,6 +14,7 @@ import Animated, {
 } from 'react-native-reanimated';
 // Removed blur imports - creating custom effect instead
 import { useTheme } from '../../contexts/ThemeContext';
+import { useOrientation } from '../../utils/useOrientation';
 import Icon from '../common/Icon';
 
 interface FABProps {
@@ -30,6 +31,7 @@ interface MenuButtonProps {
   theme: any;
   position: number; // Position index (0, 1, 2)
   isDark: boolean;
+  isLandscape: boolean;
 }
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -41,21 +43,38 @@ const MenuButton: React.FC<MenuButtonProps> = ({
   isExpanded, 
   theme, 
   position,
-  isDark
+  isDark,
+  isLandscape
 }) => {
   const translateY = useSharedValue(0);
+  const translateX = useSharedValue(0);
   const scale = useSharedValue(0);
   const opacity = useSharedValue(0);
 
   React.useEffect(() => {
     if (isExpanded) {
-      translateY.value = withDelay(
-        delay,
-        withSpring(-(56 + 16) * (position + 1), {
-          damping: 15,
-          stiffness: 150,
-        })
-      );
+      if (isLandscape) {
+        // In landscape, expand horizontally to the left
+        translateX.value = withDelay(
+          delay,
+          withSpring(-(56 + 16) * (position + 1), {
+            damping: 15,
+            stiffness: 150,
+          })
+        );
+        translateY.value = 0;
+      } else {
+        // In portrait, expand vertically upward
+        translateY.value = withDelay(
+          delay,
+          withSpring(-(56 + 16) * (position + 1), {
+            damping: 15,
+            stiffness: 150,
+          })
+        );
+        translateX.value = 0;
+      }
+      
       scale.value = withDelay(
         delay,
         withSpring(1, {
@@ -72,14 +91,16 @@ const MenuButton: React.FC<MenuButtonProps> = ({
     } else {
       // Immediately reset to starting values
       translateY.value = 0;
+      translateX.value = 0;
       scale.value = 0;
       opacity.value = 0;
     }
-  }, [isExpanded]);
+  }, [isExpanded, isLandscape]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
       { translateY: translateY.value },
+      { translateX: translateX.value },
       { scale: scale.value },
     ],
     opacity: opacity.value,
@@ -104,8 +125,10 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
   onCustomize,
 }, ref) => {
   const { currentTheme } = useTheme();
+  const { isLandscape, width, height } = useOrientation();
   const insets = useSafeAreaInsets();
   const [isExpanded, setIsExpanded] = useState(false);
+
 
   // Helper function to detect if theme is dark
   const isDarkTheme = (theme: any) => {
@@ -176,7 +199,12 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
     pointerEvents: backdropOpacity.value > 0 ? 'auto' : 'none',
   }));
 
-  const styles = createStyles(currentTheme, insets);
+  const styles = createStyles(currentTheme, insets, isLandscape);
+
+  // Only show FAB in portrait mode - use tab navigation FAB in landscape
+  if (isLandscape) {
+    return null;
+  }
 
   return (
     <View style={styles.container}>
@@ -205,6 +233,7 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
           theme={currentTheme}
           position={2}
           isDark={isDarkTheme(currentTheme)}
+          isLandscape={isLandscape}
         />
 
         {/* Media Entry Button */}
@@ -217,6 +246,7 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
           theme={currentTheme}
           position={1}
           isDark={isDarkTheme(currentTheme)}
+          isLandscape={isLandscape}
         />
 
         {/* Customize Button */}
@@ -229,6 +259,7 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
           theme={currentTheme}
           position={0}
           isDark={isDarkTheme(currentTheme)}
+          isLandscape={isLandscape}
         />
 
         {/* Main FAB Button */}
@@ -244,7 +275,7 @@ const FloatingActionButton = forwardRef<any, FABProps>(({
   );
 });
 
-const createStyles = (theme: any, insets: any) => {
+const createStyles = (theme: any, insets: any, isLandscape: boolean) => {
   return StyleSheet.create({
     container: {
       position: 'absolute',
@@ -253,7 +284,7 @@ const createStyles = (theme: any, insets: any) => {
       left: 0,
       top: 0,
       pointerEvents: 'box-none',
-      zIndex: 10000,
+      zIndex: 99999, // Increased z-index to ensure it's above tab bar
     },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
@@ -289,15 +320,16 @@ const createStyles = (theme: any, insets: any) => {
     },
     menuContainer: {
       position: 'absolute',
-      bottom: 24 + insets.bottom + 80, // Add tab bar height (~80px)
-      right: 24,
+      // Use safe positioning that works in both orientations
+      bottom: isLandscape ? 80 : 120,
+      right: isLandscape ? 80 : 24, // Account for landscape safe area
       alignItems: 'center',
     },
     fabButton: {
       width: 56,
       height: 56,
       borderRadius: 28,
-      backgroundColor: theme.primaryColor,
+      backgroundColor: theme.primaryColor || '#007AFF',
       justifyContent: 'center',
       alignItems: 'center',
       elevation: 6,
@@ -308,7 +340,7 @@ const createStyles = (theme: any, insets: any) => {
       },
       shadowOpacity: 0.27,
       shadowRadius: 4.65,
-      zIndex: 9999,
+      zIndex: 99998,
     },
   });
 };
@@ -331,7 +363,7 @@ const createMenuButtonStyles = (theme: any, isDark: boolean) => {
       },
       shadowOpacity: 0.3,
       shadowRadius: 4,
-      zIndex: 999,
+      zIndex: 99997, // High z-index for menu buttons
       // Subtle frosted glass border effect
       borderWidth: 1,
       borderColor: isDark 
