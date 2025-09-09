@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   ImageBackground,
   Dimensions,
   StatusBar,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { ModSpace } from '../../../types/modspace.types';
@@ -24,6 +26,10 @@ interface ProfileHeaderProps {
 const { width: screenWidth } = Dimensions.get('window');
 
 const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
+  // Local state for selected images
+  const [localAvatar, setLocalAvatar] = useState<string | undefined>(modspace.avatar);
+  const [localCover, setLocalCover] = useState<string | undefined>(modspace.coverImage);
+  
   const dispatch = useDispatch();
   const { isEditMode } = useSelector((state: RootState) => state.modspace);
   const { isPortrait } = useOrientation();
@@ -32,6 +38,41 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
 
   const handleEditProfile = () => {
     dispatch(setEditMode(!isEditMode));
+  };
+
+  // Image picker functions for Expo Go
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access photo library is required!');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].uri) {
+      setLocalAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handlePickCover = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      alert('Permission to access photo library is required!');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [3, 1],
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0].uri) {
+      setLocalCover(result.assets[0].uri);
+    }
   };
 
   const formatJoinDate = (date: Date) => {
@@ -62,11 +103,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
     <View style={[themedStyles.container, { minHeight: totalHeaderHeight, paddingTop: safeAreaInsets.top }]}>
       {/* Cover Image */}
       <ImageBackground
-        source={modspace.coverImage ? { uri: modspace.coverImage } : undefined}
+        source={localCover ? { uri: localCover } : undefined}
         style={[themedStyles.coverImage, { height: baseHeaderHeight * 0.6 }]}
         imageStyle={themedStyles.coverImageStyle}
       >
-        {!modspace.coverImage && (
+        {!localCover && (
           <View style={[themedStyles.defaultCover, { height: baseHeaderHeight * 0.6 }]}>
             <Icon name="book" size={48} color="rgba(255, 255, 255, 0.8)" />
           </View>
@@ -83,6 +124,27 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
             color="white" 
           />
         </TouchableOpacity>
+
+        {/* Cover Image Picker Button - Only shown in edit mode */}
+        {isEditMode && (
+          <TouchableOpacity
+            style={{
+              position: 'absolute',
+              bottom: 12,
+              right: 60,
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              borderRadius: 20,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              flexDirection: 'row',
+              alignItems: 'center'
+            }}
+            onPress={handlePickCover}
+          >
+            <Icon name="edit" size="sm" color="white" />
+            <Text style={{ color: 'white', marginLeft: 6, fontSize: 12 }}>Change Banner</Text>
+          </TouchableOpacity>
+        )}
       </ImageBackground>
 
       {/* Profile Info */}
@@ -97,9 +159,9 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
             top: -avatarSize / 2,
           }
         ]}>
-          {modspace.avatar ? (
+          {localAvatar ? (
             <ImageBackground
-              source={{ uri: modspace.avatar }}
+              source={{ uri: localAvatar }}
               style={themedStyles.avatar}
               imageStyle={themedStyles.avatarImageStyle}
             />
@@ -113,6 +175,33 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ modspace }) => {
                 {getInitials(modspace.displayName)}
               </Text>
             </View>
+          )}
+          
+          {/* Avatar Image Picker Button - Only shown in edit mode */}
+          {isEditMode && (
+            <TouchableOpacity 
+              style={{ 
+                position: 'absolute',
+                bottom: -5,
+                right: -5,
+                backgroundColor: currentTheme.surfaceColor || '#fff',
+                borderRadius: 18,
+                width: 36,
+                height: 36,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.2,
+                shadowRadius: 3,
+                elevation: 3,
+                borderWidth: 1,
+                borderColor: currentTheme.primaryColor || '#007AFF'
+              }}
+              onPress={handlePickAvatar}
+            >
+              <Icon name="edit" size="xs" color={currentTheme.primaryColor || '#007AFF'} />
+            </TouchableOpacity>
           )}
         </View>
 
