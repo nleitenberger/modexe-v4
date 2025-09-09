@@ -47,10 +47,10 @@ export const calculatePageDimensions = (
   isPortrait: boolean
 ) => {
   const config = getPageConfig(pageSize);
-  const availableWidth = Math.min(screenWidth - 32, config.maxWidth); // Account for screen margins
   
   if (isPortrait) {
-    // Single page layout
+    // Single page layout - use maxWidth constraint
+    const availableWidth = Math.min(screenWidth - 32, config.maxWidth); // Account for screen margins
     const calculatedHeight = Math.min(
       Math.max(config.minHeight, availableWidth / config.aspectRatio),
       config.maxHeight
@@ -62,11 +62,22 @@ export const calculatePageDimensions = (
       padding: config.padding,
     };
   } else {
-    // Dual page layout - split width for two pages
-    const pageWidth = (availableWidth - 12) / 2; // 12px gap between pages
+    // Dual page layout - use available space efficiently while maintaining visual differences
+    const screenMargin = 32; // Screen margins
+    const pageGap = 12; // Gap between pages
+    const maxScreenHeight = screenHeight - 120; // Leave space for toolbars and padding
+    
+    // Calculate available width for both pages combined
+    const totalAvailableWidth = screenWidth - screenMargin;
+    const availablePageWidth = (totalAvailableWidth - pageGap) / 2;
+    
+    // Use the available width but let each page size determine its own height based on aspect ratio
+    // This creates visual differences through proportions rather than width
+    const pageWidth = availablePageWidth;
+    
     const calculatedHeight = Math.min(
       Math.max(config.minHeight, pageWidth / config.aspectRatio),
-      config.maxHeight
+      maxScreenHeight
     );
     
     return {

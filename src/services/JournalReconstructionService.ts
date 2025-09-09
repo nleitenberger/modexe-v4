@@ -1,4 +1,4 @@
-import { Journal, JournalPage, RichTextContent } from '../types/journal.types';
+import { Journal, JournalPage, RichTextContent, PageSize } from '../types/journal.types';
 import { SharedContentItem } from '../types/modspace.types';
 
 /**
@@ -83,6 +83,7 @@ export class JournalReconstructionService {
       id: entry.journalId || entry.id,
       title: entry.title,
       pages,
+      pageSize: PageSize.JOURNAL, // Default page size
       createdAt: validCreatedAt,
       updatedAt: validUpdatedAt,
       metadata: {

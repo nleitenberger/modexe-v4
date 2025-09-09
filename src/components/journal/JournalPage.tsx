@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -10,9 +10,12 @@ import { RootState } from '../../store';
 import { JournalPage } from '../../types/journal.types';
 import { updatePageContent } from '../../store/journalSlice';
 import { selectSticker } from '../../store/stickerSlice';
+import { updateHandwritingStrokes } from '../../store/journalSlice';
 import TextWithStickers from './TextWithStickers';
 import DraggableSticker from '../stickers/DraggableSticker';
-import { TEXT_LAYER_Z_INDEX } from '../../constants/layers';
+import HandwritingCanvas from './HandwritingCanvas';
+import { TEXT_LAYER_Z_INDEX, HANDWRITING_LAYER_Z_INDEX } from '../../constants/layers';
+import { HandwritingCanvasRef } from '../../types/handwriting.types';
 
 interface JournalPageComponentProps {
   page: JournalPage;
@@ -27,8 +30,10 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
 }) => {
   const dispatch = useDispatch();
   const isTransforming = useSelector((state: RootState) => state.sticker.isTransforming);
+  const handwritingState = useSelector((state: RootState) => state.handwriting);
   const [isEditing, setIsEditing] = useState(false);
   const [localText, setLocalText] = useState(page.content.text);
+  const handwritingRef = useRef<HandwritingCanvasRef>(null);
 
   // Keep local text in sync with page content
   useEffect(() => {
@@ -59,9 +64,18 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
   };
 
   const handlePageTap = () => {
-  if (isTransforming) return;
+    if (isTransforming) return;
     // Deselect any selected stickers when tapping on empty page area
     dispatch(selectSticker(null));
+  };
+
+  const handleHandwritingStrokesChange = (strokes: any[]) => {
+    // Convert PencilKit strokes to our HandwritingStroke format and update Redux
+    // This is a simplified implementation - in practice you'd need proper conversion
+    dispatch(updateHandwritingStrokes({
+      pageId: page.id,
+      strokes: page.handwritingStrokes // Keep existing for now
+    }));
   };
 
   return (
@@ -99,9 +113,23 @@ const JournalPageComponent: React.FC<JournalPageComponentProps> = ({
           />
         </View>
 
-        {/* Layer 3: Foreground stickers (above text) */}
+        {/* Layer 3: Handwriting layer (above text, below foreground stickers) */}
+        <HandwritingCanvas
+          ref={handwritingRef}
+          width={width - 48} // Match text area width
+          height={(page as any).height || 600}
+          isVisible={true}
+          isInteractive={handwritingState.isHandwritingMode && !isTransforming}
+          initialStrokes={page.handwritingStrokes}
+          selectedTool={handwritingState.selectedTool}
+          selectedColor={handwritingState.selectedColor}
+          strokeWidth={handwritingState.strokeWidth}
+          onStrokesChange={handleHandwritingStrokesChange}
+        />
+
+        {/* Layer 4: Foreground stickers (above handwriting) */}
         {page.stickers
-          .filter(sticker => sticker.zIndex >= TEXT_LAYER_Z_INDEX)
+          .filter(sticker => sticker.zIndex >= HANDWRITING_LAYER_Z_INDEX + 500)
           .map((sticker) => (
             <DraggableSticker
               key={sticker.id}

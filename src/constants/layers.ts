@@ -4,15 +4,17 @@
 
 // Z-index ranges for different layers
 export const TEXT_LAYER_Z_INDEX = 1000000000;
-export const INITIAL_STICKER_Z_INDEX = TEXT_LAYER_Z_INDEX + 1; // Start above text
+export const HANDWRITING_LAYER_Z_INDEX = TEXT_LAYER_Z_INDEX + 500; // Between text and foreground stickers
+export const INITIAL_STICKER_Z_INDEX = TEXT_LAYER_Z_INDEX + 1000; // Start above handwriting
 export const BACKGROUND_LAYER_MAX = TEXT_LAYER_Z_INDEX - 1;
-export const FOREGROUND_LAYER_MIN = TEXT_LAYER_Z_INDEX + 1;
+export const FOREGROUND_LAYER_MIN = TEXT_LAYER_Z_INDEX + 1000;
 
 // Layer type enumeration
 export enum LayerType {
-  BACKGROUND = 'background', // Behind text
-  TEXT = 'text',            // Text layer
-  FOREGROUND = 'foreground'  // Above text
+  BACKGROUND = 'background',   // Behind text
+  TEXT = 'text',              // Text layer
+  HANDWRITING = 'handwriting', // Handwriting layer (above text)
+  FOREGROUND = 'foreground'    // Above handwriting
 }
 
 /**

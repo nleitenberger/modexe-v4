@@ -1,4 +1,5 @@
 import { StickerInstance } from './sticker.types';
+import { HandwritingStroke } from './handwriting.types';
 
 export enum PageSize {
   POCKETBOOK = 'pocketbook',
@@ -35,6 +36,7 @@ export interface JournalPage {
   pageNumber: number;
   content: RichTextContent;
   stickers: StickerInstance[];
+  handwritingStrokes: HandwritingStroke[];
   backgroundColor: string;
   textColor: string;
 }

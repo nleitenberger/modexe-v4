@@ -15,6 +15,8 @@ export type IconName =
   | 'new-entry' | 'customize' | 'media' | 'close' | 'rocket' | 'more' | 'plus'
   // Asset Library Icons
   | 'search' | 'clock' | 'layers' | 'trash' | 'check'
+  // UI Icons
+  | 'chevron-down' | 'chevron-right' | 'chevron-left' | 'chevron-up'
   // Stickers/Emotions
   | 'smile' | 'tree' | 'flower' | 'sun' | 'moon' | 'star' | 'lightning' | 'arrow-right' | 'warning' | 'fire';
 
@@ -376,6 +378,27 @@ const Icon: React.FC<IconProps> = ({ name, size = 'md', color = '#333', style })
             <Path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" fill="none" stroke={color} strokeWidth="2"/>
             <Path d="M8 6V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2" fill="none" stroke={color} strokeWidth="2"/>
           </>
+        );
+
+      // UI Icons
+      case 'chevron-down':
+        return (
+          <Path d="M6 9l6 6 6-6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        );
+
+      case 'chevron-right':
+        return (
+          <Path d="M9 18l6-6-6-6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        );
+
+      case 'chevron-left':
+        return (
+          <Path d="M15 18l-6-6 6-6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        );
+
+      case 'chevron-up':
+        return (
+          <Path d="M18 15l-6-6-6 6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         );
       
       default:

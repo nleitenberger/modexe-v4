@@ -2,12 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import journalReducer from './journalSlice';
 import stickerReducer from './stickerSlice';
 import modspaceReducer from './modspaceSlice';
+import handwritingReducer from './handwritingSlice';
 
 export const store = configureStore({
   reducer: {
     journal: journalReducer,
     sticker: stickerReducer,
     modspace: modspaceReducer,
+    handwriting: handwritingReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -28,7 +30,9 @@ export const store = configureStore({
           'modspace/setViewingModSpace',
           'modspace/initializeMobileLayoutConfig',
           'modspace/addContentBlock',
-          'modspace/updateContentBlock'
+          'modspace/updateContentBlock',
+          'journal/addHandwritingStroke',
+          'journal/updateHandwritingStrokes'
         ],
         ignoredPaths: [
           'journal.currentJournal.createdAt', 

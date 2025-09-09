@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Journal, JournalPage, JournalState, RichTextContent, PageSize } from '../types/journal.types';
 import { StickerInstance } from '../types/sticker.types';
+import { HandwritingStroke } from '../types/handwriting.types';
 import { generateJournalId, generatePageId } from '../utils/uniqueId';
 
 const initialState: JournalState = {
@@ -38,6 +39,7 @@ const journalSlice = createSlice({
               },
             },
             stickers: [],
+            handwritingStrokes: [],
             backgroundColor: '#ffffff',
             textColor: '#000000',
           },
@@ -56,6 +58,7 @@ const journalSlice = createSlice({
               },
             },
             stickers: [],
+            handwritingStrokes: [],
             backgroundColor: '#ffffff',
             textColor: '#000000',
           },
@@ -311,6 +314,7 @@ const journalSlice = createSlice({
             },
           },
           stickers: [],
+          handwritingStrokes: [],
           backgroundColor: '#ffffff',
           textColor: '#000000',
         };
@@ -330,6 +334,40 @@ const journalSlice = createSlice({
 
     markSaved: (state) => {
       state.isDirty = false;
+    },
+
+    // Handwriting actions
+    addHandwritingStroke: (state, action: PayloadAction<{ pageId: string; stroke: HandwritingStroke }>) => {
+      if (state.currentJournal) {
+        const page = state.currentJournal.pages.find(p => p.id === action.payload.pageId);
+        if (page) {
+          page.handwritingStrokes.push(action.payload.stroke);
+          state.currentJournal.updatedAt = new Date();
+          state.isDirty = true;
+        }
+      }
+    },
+
+    updateHandwritingStrokes: (state, action: PayloadAction<{ pageId: string; strokes: HandwritingStroke[] }>) => {
+      if (state.currentJournal) {
+        const page = state.currentJournal.pages.find(p => p.id === action.payload.pageId);
+        if (page) {
+          page.handwritingStrokes = action.payload.strokes;
+          state.currentJournal.updatedAt = new Date();
+          state.isDirty = true;
+        }
+      }
+    },
+
+    clearHandwritingStrokes: (state, action: PayloadAction<string>) => {
+      if (state.currentJournal) {
+        const page = state.currentJournal.pages.find(p => p.id === action.payload);
+        if (page) {
+          page.handwritingStrokes = [];
+          state.currentJournal.updatedAt = new Date();
+          state.isDirty = true;
+        }
+      }
     },
   },
 });
@@ -358,6 +396,9 @@ export const {
   setLoading,
   setError,
   markSaved,
+  addHandwritingStroke,
+  updateHandwritingStrokes,
+  clearHandwritingStrokes,
 } = journalSlice.actions;
 
 export default journalSlice.reducer;

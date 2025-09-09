@@ -11,6 +11,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { togglePalette } from '../../store/stickerSlice';
+import { toggleHandwritingMode } from '../../store/handwritingSlice';
 import { shareJournalEntry, updateSharedEntry } from '../../store/modspaceSlice';
 import { SharedJournalEntry } from '../../types/modspace.types';
 import { generateSharedEntryId } from '../../utils/uniqueId';
@@ -25,12 +26,17 @@ const JournalToolbar: React.FC = () => {
   const dispatch = useDispatch();
   const { currentJournal, originalSharedEntryId } = useSelector((state: RootState) => state.journal);
   const { isPaletteExpanded } = useSelector((state: RootState) => state.sticker);
+  const { isHandwritingMode } = useSelector((state: RootState) => state.handwriting);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [showPostModal, setShowPostModal] = React.useState(false);
   const [showPageSizeSelector, setShowPageSizeSelector] = React.useState(false);
 
   const handleToggleStickers = () => {
     dispatch(togglePalette());
+  };
+
+  const handleToggleHandwriting = () => {
+    dispatch(toggleHandwritingMode());
   };
 
 
@@ -126,15 +132,28 @@ const JournalToolbar: React.FC = () => {
   return (
     <SafeAreaView style={styles.toolbarContainer}>
       <View style={styles.toolbar}>
-        {/* Left side - Customize button */}
-        <TouchableOpacity
-          style={[styles.customizeButton, isPaletteExpanded && styles.activeButton]}
-          onPress={handleToggleStickers}
-        >
-          <Text style={[styles.customizeButtonText, isPaletteExpanded && styles.activeButtonText]}>
-            Customize
-          </Text>
-        </TouchableOpacity>
+        {/* Left side - Customize and Handwriting buttons */}
+        <View style={styles.leftButtonContainer}>
+          <TouchableOpacity
+            style={[styles.customizeButton, isPaletteExpanded && styles.activeButton]}
+            onPress={handleToggleStickers}
+          >
+            <Text style={[styles.customizeButtonText, isPaletteExpanded && styles.activeButtonText]}>
+              Customize
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.handwritingButton, isHandwritingMode && styles.activeButton]}
+            onPress={handleToggleHandwriting}
+          >
+            <Icon 
+              name="edit" 
+              size="sm" 
+              color={isHandwritingMode ? "#007AFF" : "#666"} 
+            />
+          </TouchableOpacity>
+        </View>
         
         {/* Center - Page size button */}
         <TouchableOpacity
@@ -238,6 +257,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginLeft: 8,
   },
+  leftButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   customizeButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -248,6 +272,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#007AFF',
+  },
+  handwritingButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pageSizeButton: {
     paddingHorizontal: 12,

@@ -15,6 +15,7 @@ interface JournalSpreadProps {
 const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
   const { currentSpreadIndex, currentPageIndex } = useSelector((state: RootState) => state.journal);
   const isTransforming = useSelector((state: RootState) => state.sticker.isTransforming);
+  const isHandwritingMode = useSelector((state: RootState) => state.handwriting.isHandwritingMode);
   const { width: screenWidth, height: screenHeight, isPortrait, isLandscape } = useOrientation();
 
   // Get page size configuration
@@ -61,7 +62,7 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
         style={styles.scrollContainer}
         contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!isTransforming}
+        scrollEnabled={!isTransforming && !isHandwritingMode}
         nestedScrollEnabled={false}
       >
         <View style={[
@@ -90,7 +91,7 @@ const JournalSpread: React.FC<JournalSpreadProps> = ({ journal }) => {
       style={styles.scrollContainer}
       contentContainerStyle={[styles.spreadContainer, { paddingHorizontal: pageDimensions.padding.horizontal }]}
       showsVerticalScrollIndicator={false}
-      scrollEnabled={!isTransforming}
+      scrollEnabled={!isTransforming && !isHandwritingMode}
       nestedScrollEnabled={false}
     >
       <View style={[
